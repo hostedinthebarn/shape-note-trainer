@@ -1,0 +1,89 @@
+<!doctype html>
+<!-- PROTOTYPE (SW-38, throwaway): what do the v1 screens look like? Three variants of the
+     exercise screen (?variant=A|B|C) inside one rough flow. Not the app. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="/manifest.webmanifest">
+<title>Shape-note screens</title>
+<style>
+  @font-face { font-family: Bravura; src: url(/font/Bravura.woff2) format("woff2"); font-display: block; }
+  :root { --bg:#fbfaf7; --fg:#1d1d1f; --dim:#77756f; --line:#2b2b2b; --card:#fff; --border:#e4e1da;
+    --cur:#1f6feb; --ok:#1a7f37; --help:#bf8700; --skip:#a0a0a0; --warn:#cf222e; --accent:#1f6feb; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#141414; --fg:#eee; --dim:#999; --line:#ddd; --card:#1e1e1e; --border:#333;
+    --cur:#58a6ff; --ok:#3fb950; --help:#d29922; --skip:#666; --warn:#f85149; --accent:#58a6ff; } }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.4 -apple-system, system-ui, sans-serif; }
+  body { padding: env(safe-area-inset-top) 0 90px; }
+  #app { max-width: 520px; margin: 0 auto; padding: 12px 16px; }
+  h1 { font-size: 26px; margin: 18px 0 6px; } h2 { font-size: 20px; margin: 4px 0 10px; }
+  p { margin: 6px 0; } .dim { color: var(--dim); } .small { font-size: 13px; }
+  button { font: inherit; border: 1px solid var(--border); background: var(--card); color: var(--fg); border-radius: 12px; padding: 12px 14px; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button:disabled { opacity: .35; }
+  .big { width: 100%; padding: 16px; font-size: 18px; margin: 6px 0; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .spread { justify-content: space-between; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; min-height: 40px; }
+  .x { border: none; background: none; font-size: 22px; padding: 6px 8px; color: var(--dim); }
+  .g { font-family: Bravura; fill: var(--line); }
+  svg.staff line { stroke: var(--line); }
+  .note.done .g { fill: var(--ok); } .note.done line { stroke: var(--ok); }
+  .note.helped .g { fill: var(--help); } .note.helped line { stroke: var(--help); }
+  .note.skipped .g { fill: var(--skip); } .note.skipped line { stroke: var(--skip); }
+  .note.cur .g { fill: var(--cur); } .note.cur line { stroke: var(--cur); }
+  .note.dimmed .g { fill: var(--dim); } .note.dimmed line { stroke: var(--dim); }
+  .shape { font-family: Bravura; line-height: 1; }
+  .level { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 14px; background: var(--card); margin: 8px 0; width: 100%; text-align: left; }
+  .level .n { font-size: 22px; font-weight: 700; width: 28px; text-align: center; }
+  .level.suggest { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
+  .dots { letter-spacing: 2px; color: var(--ok); font-size: 12px; }
+  .say { font-size: 20px; min-height: 30px; text-align: center; margin: 6px 0; }
+  .say b { font-size: 24px; }
+  .meter { position: relative; height: 18px; border-radius: 9px; background: color-mix(in srgb, var(--fg) 8%, transparent); margin: 6px 0; }
+  .meter .zone { position: absolute; top: 0; bottom: 0; border-radius: 9px; background: color-mix(in srgb, var(--ok) 25%, transparent); }
+  .meter .needle { position: absolute; top: -3px; bottom: -3px; width: 8px; margin-left: -4px; border-radius: 4px; background: var(--fg); transition: left 80ms linear; }
+  .actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .actions button { padding: 14px 6px; font-size: 15px; }
+  .hint { background: var(--help) !important; border-color: var(--help) !important; color: #fff !important; animation: pulse 1.2s infinite; }
+  @keyframes pulse { 50% { opacity: .65; } }
+  .ladder { position: relative; margin: 8px auto; }
+  .rung { position: absolute; left: 0; right: 0; display: flex; align-items: center; gap: 10px; padding-left: 12px; border-top: 1px solid var(--border); }
+  .rung.target { background: color-mix(in srgb, var(--cur) 14%, transparent); border-top-color: var(--cur); }
+  .rung .lab { width: 34px; font-size: 15px; color: var(--dim); }
+  .rung.target .lab { color: var(--cur); font-weight: 700; }
+  .ball { position: absolute; left: 50%; width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; background: var(--warn); transition: top 70ms linear; }
+  .ball.in { background: var(--ok); }
+  .ball.off { opacity: 0; }
+  .strip { display: flex; flex-wrap: nowrap; gap: 0; justify-content: center; margin: 4px 0 10px; }
+  .strip span { --line: var(--dim); padding: 4px 1px; } .strip span.cur { --line: var(--cur); } .strip span.done { --line: var(--ok); } .strip span.helped { --line: var(--help); } .strip span.skipped { --line: var(--skip); }
+  .strip span.cur svg { transform: scale(1.35); }
+    .scroll { overflow: hidden; position: relative; border-radius: 12px; background: var(--card); border: 1px solid var(--border); }
+  .scroll .inner { transition: transform 300ms ease; will-change: transform; }
+  .scroll svg.trace { position: absolute; left: 0; top: 0; pointer-events: none; }
+  .scroll .center { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: color-mix(in srgb, var(--cur) 35%, transparent); }
+  .round { width: 64px; height: 64px; border-radius: 50%; font-size: 13px; padding: 0; }
+  /* prototype chrome */
+  #proto { position: fixed; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 50;
+    display: flex; gap: 2px; align-items: center; background: #111; color: #fff; border-radius: 999px; padding: 4px; box-shadow: 0 4px 16px rgba(0,0,0,.35); font-size: 13px; }
+  #proto button { background: none; border: none; color: #fff; padding: 8px 10px; border-radius: 999px; }
+  #proto .lab { padding: 0 6px; white-space: nowrap; }
+  #drawer { position: fixed; left: 8px; right: 8px; bottom: calc(66px + env(safe-area-inset-bottom)); z-index: 49; background: #111; color: #eee; border-radius: 14px; padding: 12px; font-size: 13px; display: none; max-width: 520px; margin: 0 auto; }
+  #drawer.open { display: block; }
+  #drawer input[type=range] { width: 100%; }
+  #drawer button { background: #222; color: #eee; border-color: #444; padding: 8px 10px; }
+  #drawer textarea { width: 100%; min-height: 60px; background: #1a1a1a; color: #eee; border: 1px solid #444; border-radius: 8px; font: inherit; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="drawer"></div>
+<div id="proto"></div>
+<script type="module" src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "component": "shape-table",
+  "model": "qwen3-coder:30b",
+  "num_ctx": 16384,
+  "node": "v26.12.0",
+  "result": "pass",
+  "tries": 1,
+  "seconds": 26.4,
+  "tokens_in": 3230,
+  "tokens_out": 1943,
+  "per_try": [
+    {
+      "try": 1,
+      "pass": true,
+      "tokens_in": 3230,
+      "tokens_out": 1943,
+      "seconds": 26.4,
+      "load_seconds": 0.0,
+      "wall_seconds": 26.4,
+      "oddities": []
+    }
+  ],
+  "workdir": "/Users/gary/Code/shape-note-trainer/prototypes/screens/gen-shapes/shape-table/qwen3-coder_30b"
+}

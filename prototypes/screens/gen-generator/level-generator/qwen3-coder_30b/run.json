@@ -1,0 +1,24 @@
+{
+  "component": "level-generator",
+  "model": "qwen3-coder:30b",
+  "num_ctx": 16384,
+  "node": "v26.12.0",
+  "result": "pass",
+  "tries": 1,
+  "seconds": 17.0,
+  "tokens_in": 6214,
+  "tokens_out": 833,
+  "per_try": [
+    {
+      "try": 1,
+      "pass": true,
+      "tokens_in": 6214,
+      "tokens_out": 833,
+      "seconds": 17.0,
+      "load_seconds": 1.3,
+      "wall_seconds": 17.0,
+      "oddities": []
+    }
+  ],
+  "workdir": "/Users/gary/Code/shape-note-trainer/prototypes/screens/gen-generator/level-generator/qwen3-coder_30b"
+}
