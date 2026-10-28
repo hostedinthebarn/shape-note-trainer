@@ -1,0 +1,246 @@
+import type { Clef, Key, Melody } from "../types.ts";
+import { shapeFor, degreeFromStep, fillForDuration } from "./shapes.ts";
+import type { ShapeName } from "./shapes.ts";
+import { NOTE_WIDTH, yOf, staffPosition, keySignature, splitBars, breakSystems } from "./staff.ts";
+
+export { NOTE_WIDTH };         // re-exported from staff.ts
+
+export const HEAD_W = 1.44;    // notehead width
+export const STEM_LEN = 3.5;
+export const CLEF_X = 0.5;     // x of the clef glyph
+export const KEY_X = 3.3;      // x of the first key-signature glyph
+export const KEY_STEP = 1;     // x advance per key-signature glyph
+export const KEY_GAP = 1.5;    // gap after the key signature before the first note
+export const BAR_GAP = 1;      // gap after a barline before the next note
+export const THICK = { staff: 0.13, ledger: 0.16, stem: 0.12, bar: 0.16, final: 0.5 } as const;
+export const CODE = { gClef: 0xe050, fClef: 0xe062, sharp: 0xe262, flat: 0xe260, dot: 0xe1e7, flagUp: 0xe240, flagDown: 0xe241 } as const;
+/** Where a stem attaches to each notehead shape (Bravura stemUpSE / stemDownNW anchors), as
+ *  [x right of the head's left edge, y UP from the head's centre]; null where unused. */
+export const ANCHORS: Readonly<Record<ShapeName, { up: [number, number] | null; down: [number, number] | null }>> = {
+  "triangle-up": { up: [1.424, -0.5], down: [0, -0.5] },
+  moon: { up: [1.444, 0.068], down: [0, 0.072] },
+  diamond: { up: [1.436, 0], down: [0, 0] },
+  "triangle-left": { up: [1.436, -0.5], down: null },
+  "triangle-right": { up: null, down: [0, 0.476] },
+  round: { up: [1.456, 0.192], down: [0, -0.168] },
+  square: { up: [1.44, -0.46], down: [0, 0.46] },
+  "triangle-round": { up: [1.424, 0.172], down: [0, 0.172] },
+};
+
+export interface Glyph { kind: "clef" | "key" | "head" | "dot" | "flag"; codepoint: number; x: number; y: number; note: number | null; }
+export interface Line { kind: "staff" | "ledger" | "stem" | "bar"; x1: number; y1: number; x2: number; y2: number; thickness: number; note: number | null; }
+export interface StaffSystem { glyphs: Glyph[]; lines: Line[]; width: number; firstNote: number; lastNote: number; }
+export interface NoteAnchor { system: number; x: number; y: number; }
+export interface StaffLayout { systems: StaffSystem[]; anchors: NoteAnchor[]; }
+
+export function layoutStaff(melody: Melody, clef: Clef, key: Key, maxWidth: number): StaffLayout {
+  if (maxWidth <= 0) throw new RangeError("maxWidth must be > 0");
+  if (melody.degrees.length === 0) throw new RangeError("melody must not be empty");
+  if (melody.degrees.length !== melody.rhythm.length) throw new RangeError("degrees and rhythm must be the same length");
+
+  const bars = splitBars(melody.rhythm);
+  const barWidths = bars.map(bar => bar.reduce((sum, i) => sum + NOTE_WIDTH[melody.rhythm[i]], 0));
+  const notesX = KEY_X + KEY_STEP * keySignature(key, clef).length + KEY_GAP;
+  const systems = breakSystems(barWidths, notesX, BAR_GAP, maxWidth);
+  
+  if (systems.length === 0) {
+    return { systems: [], anchors: [] };
+  }
+
+  const result: StaffLayout = { systems: [], anchors: [] };
+  let noteIndex = 0;
+
+  for (let systemIndex = 0; systemIndex < systems.length; systemIndex++) {
+    const systemBarIndices = systems[systemIndex];
+    const system: StaffSystem = { glyphs: [], lines: [], width: 0, firstNote: noteIndex, lastNote: 0 };
+    
+    // Clef
+    const clefY = clef === "treble" ? yOf(2) : yOf(6);
+    system.glyphs.push({ kind: "clef", codepoint: clef === "treble" ? CODE.gClef : CODE.fClef, x: CLEF_X, y: clefY, note: null });
+    
+    // Key signature
+    const keySig = keySignature(key, clef);
+    for (let i = 0; i < keySig.length; i++) {
+      system.glyphs.push({
+        kind: "key",
+        codepoint: key.sharps > 0 ? CODE.sharp : CODE.flat,
+        x: KEY_X + KEY_STEP * i,
+        y: yOf(keySig[i]),
+        note: null
+      });
+    }
+    
+    let cursorX = notesX;
+    
+    // Process bars in this system
+    for (let barIndex = 0; barIndex < systemBarIndices.length; barIndex++) {
+      const barNotes = bars[systemBarIndices[barIndex]];
+      
+      // Process notes in the bar
+      for (let i = 0; i < barNotes.length; i++) {
+        const noteIndexInMelody = barNotes[i];
+        const step = melody.degrees[noteIndexInMelody];
+        const duration = melody.rhythm[noteIndexInMelody];
+        
+        const p = staffPosition(step, key, clef);
+        const y = yOf(p);
+        
+        // Determine stem direction
+        let stemDir: "up" | "down" | "none" = "none";
+        if (duration !== 4) {
+          stemDir = p >= 4 ? "down" : "up";
+        }
+        
+        // Get shape
+        const fill = fillForDuration(duration);
+        const shape = shapeFor(degreeFromStep(step), fill, stemDir);
+        
+        // Head glyph
+        system.glyphs.push({
+          kind: "head",
+          codepoint: shape.codepoint,
+          x: cursorX,
+          y: y,
+          note: noteIndexInMelody
+        });
+        
+        // Ledger lines
+        if (p <= -2) {
+          for (let pos = -2; pos >= p; pos -= 2) {
+            system.lines.push({
+              kind: "ledger",
+              x1: cursorX - 0.4,
+              y1: yOf(pos),
+              x2: cursorX + HEAD_W + 0.4,
+              y2: yOf(pos),
+              thickness: THICK.ledger,
+              note: noteIndexInMelody
+            });
+          }
+        } else if (p >= 10) {
+          for (let pos = 10; pos <= p; pos += 2) {
+            system.lines.push({
+              kind: "ledger",
+              x1: cursorX - 0.4,
+              y1: yOf(pos),
+              x2: cursorX + HEAD_W + 0.4,
+              y2: yOf(pos),
+              thickness: THICK.ledger,
+              note: noteIndexInMelody
+            });
+          }
+        }
+        
+        // Stem
+        if (stemDir !== "none") {
+          const anchor = ANCHORS[shape.shape];
+          const [ax, ay] = stemDir === "up" ? anchor.up! : anchor.down!;
+          const stemY1 = y - ay;
+          const stemY2 = stemY1 + (stemDir === "up" ? -STEM_LEN : STEM_LEN);
+          
+          system.lines.push({
+            kind: "stem",
+            x1: cursorX + ax,
+            y1: stemY1,
+            x2: cursorX + ax,
+            y2: stemY2,
+            thickness: THICK.stem,
+            note: noteIndexInMelody
+          });
+        }
+        
+        // Flag (for eighth notes only)
+        if (duration === 0.5) {
+          const flagCode = stemDir === "up" ? CODE.flagUp : CODE.flagDown;
+          // Find the stem end to position the flag correctly
+          const anchor = ANCHORS[shape.shape];
+          const [ax, ay] = stemDir === "up" ? anchor.up! : anchor.down!;
+          const stemY1 = y - ay;
+          const stemY2 = stemY1 + (stemDir === "up" ? -STEM_LEN : STEM_LEN);
+          system.glyphs.push({
+            kind: "flag",
+            codepoint: flagCode,
+            x: cursorX + ax - THICK.stem / 2,
+            y: stemY2,
+            note: noteIndexInMelody
+          });
+        }
+        
+        // Dot (for dotted notes)
+        if (duration === 1.5 || duration === 3) {
+          const dotY = p % 2 === 0 ? yOf(p + 1) : yOf(p);
+          system.glyphs.push({
+            kind: "dot",
+            codepoint: CODE.dot,
+            x: cursorX + HEAD_W + 0.5,
+            y: dotY,
+            note: noteIndexInMelody
+          });
+        }
+        
+        // Anchor
+        result.anchors.push({
+          system: systemIndex,
+          x: cursorX + HEAD_W / 2,
+          y: y
+        });
+        
+        // Advance cursor
+        cursorX += NOTE_WIDTH[duration];
+        
+        noteIndex++;
+      }
+      
+      // Barline after the bar (if not the last bar in the system)
+      if (barIndex < systemBarIndices.length - 1) {
+        system.lines.push({
+          kind: "bar",
+          x1: cursorX,
+          y1: 0,
+          x2: cursorX,
+          y2: 4,
+          thickness: THICK.bar,
+          note: null
+        });
+        cursorX += BAR_GAP;
+      }
+    }
+    
+    // Final barline (if this is the last system)
+    const lastBarIndex = systemBarIndices[systemBarIndices.length - 1];
+    const isLastSystem = systemIndex === systems.length - 1;
+    const lastNoteInMelody = bars[lastBarIndex][bars[lastBarIndex].length - 1];
+    const isLastNote = lastNoteInMelody === melody.degrees.length - 1;
+    
+    const barThickness = isLastSystem && isLastNote ? THICK.final : THICK.bar;
+    
+    system.lines.push({
+      kind: "bar",
+      x1: cursorX,
+      y1: 0,
+      x2: cursorX,
+      y2: 4,
+      thickness: barThickness,
+      note: null
+    });
+    
+    // Staff lines
+    for (let i = 0; i < 5; i++) {
+      system.lines.push({
+        kind: "staff",
+        x1: 0,
+        y1: i,
+        x2: cursorX,
+        y2: i,
+        thickness: THICK.staff,
+        note: null
+      });
+    }
+    
+    system.width = cursorX;
+    system.lastNote = noteIndex - 1;
+    result.systems.push(system);
+  }
+  
+  return result;
+}

@@ -1,0 +1,274 @@
+<<thinking>>
+Let me analyze the specification carefully and implement each function.
+
+1. **`NOTE_WIDTH`** - A readonly record mapping duration strings to x-advance values.
+
+2. **`yOf(p)`** - Returns `4 - p / 2`.
+
+3. **`staffPosition(step, key, clef)`** - 
+   - LETTERS = ["C", "D", "E", "F", "G", "A", "B"] (index 0 to 6)
+   - do's diatonic number = `LETTERS.indexOf(key.tonic) + 7 * (Math.floor((key.doMidi - key.accidental) / 12) - 1)`
+   - bottom = 30 for treble (E4), 18 for bass (G2)
+   - position = do's diatonic number + step - bottom
+
+   Let me verify with test cases:
+   - `staffPosition(0, C4, "bass")`: tonic="C", accidental=0, doMidi=60. LETTERS.indexOf("C")=0. Math.floor((60-0)/12) - 1 = 5 - 1 = 4. diatonic = 0 + 7*4 = 28. position = 28 + 0 - 18 = 10. ✓
+   - `staffPosition(0, Bb3, "bass")`: tonic="B", accidental=-1, doMidi=58. LETTERS.indexOf("B")=6. Math.floor((58-(-1))/12) - 1 = Math.floor(59/12) - 1 = 4 - 1 = 3. diatonic = 6 + 7*3 = 27. position = 27 + 0 - 18 = 9. ✓
+   - `staffPosition(0, C4, "treble")`: diatonic = 28. position = 28 + 0 - 30 = -2. ✓
+   - `staffPosition(0, C5, "treble")`: doMidi=72. Math.floor(72/12) - 1 = 6 - 1 = 5. diatonic = 0 + 7*5 = 35. position = 35 + 0 - 30 = 5. ✓
+   - `staffPosition(0, D4, "treble")`: tonic="D", accidental=0, doMidi=62. LETTERS.indexOf("D")=1. Math.floor(62/12) - 1 = 5 - 1 = 4. diatonic = 1 + 7*4 = 29. position = 29 + 0 - 30 = -1. ✓
+   - `staffPosition(0, Eb3, "bass")`: tonic="E", accidental=-1, doMidi=51. LETTERS.indexOf("E")=2. Math.floor((51-(-1))/12) - 1 = Math.floor(52/12) - 1 = 4 - 1 = 3. diatonic = 2 + 7*3 = 23. position = 23 + 0 - 18 = 5. ✓
+   - `staffPosition(2, Eb3, "bass")`: position = 23 + 2 - 18 = 7. ✓
+   - `staffPosition(0, Fs4, "treble")`: tonic="F", accidental=1, doMidi=66. LETTERS.indexOf("F")=3. Math.floor((66-1)/12) - 1 = Math.floor(65/12) - 1 = 5 - 1 = 4. diatonic = 3 + 7*4 = 31. position = 31 + 0 - 30 = 1. ✓
+   - `staffPosition(0, A3, "bass")`: tonic="A", accidental=0, doMidi=57. LETTERS.indexOf("A")=5. Math.floor(57/12) - 1 = 4 - 1 = 3. diatonic = 5 + 7*3 = 26. position = 26 + 0 - 18 = 8. ✓
+
+4. **`keySignature(key, clef)`** -
+   - Sharps (treble): [8, 5, 9, 6, 3, 7, 4]
+   - Flats (treble): [4, 7, 3, 6, 2, 5, 1]
+   - If key.sharps > 0, take first `key.sharps` of sharp list
+   - Else if key.flats > 0, take first `key.flats` of flat list
+   - For bass clef, subtract 2 from each position
+
+   Let me verify:
+   - `keySignature(D4, "bass")`: D major has 2 sharps. Sharps treble: [8, 5, 9, 6, 3, 7, 4]. First 2: [8, 5]. Bass: [6, 3]. ✓
+   - `keySignature(Ab, "treble")`: 4 flats. Flats treble: [4, 7, 3, 6, 2, 5, 1]. First 4: [4, 7, 3, 6]. ✓
+   - `keySignature(B, "bass")`: 5 sharps. First 5 of sharps: [8, 5, 9, 6, 3]. Bass: [6, 3, 7, 4, 1]. ✓
+   - `keySignature(Bb3, "bass")`: 2 flats. First 2 of flats: [4, 7]. Bass: [2, 5]. ✓
+   - `keySignature(Db, "bass")`: 5 flats. First 5 of flats: [4, 7, 3, 6, 2]. Bass: [2, 5, 1, 4, 0]. ✓
+   - `keySignature(Fs4, "treble")`: 6 sharps. First 6 of sharps: [8, 5, 9, 6, 3, 7]. ✓
+
+5. **`splitBars(rhythm)`** -
+   - Group note indices into bars of exactly 4 quarter notes
+   - Throw RangeError if:
+     - a duration isn't a key of NOTE_WIDTH
+     - a note would make a bar exceed 4
+     - the last bar is incomplete
+
+   Let me verify:
+   - `splitBars([1.5, 0.5, 2, 3, 1, 4])`: 
+     - Bar 1: 1.5 + 0.5 + 2 = 4 → [0, 1, 2]
+     - Bar 2: 3 + 1 = 4 → [3, 4]
+     - Bar 3: 4 = 4 → [5]
+     - Result: [[0, 1, 2], [3, 4], [5]] ✓
+   - `splitBars([3, 2])`: 3 + 2 = 5 > 4, so when we try to add 2 to a bar that already has 3, it exceeds 4. Throw RangeError. ✓
+   - `splitBars([1, 1])`: total = 2, not a multiple of 4. Last bar incomplete. Throw RangeError. ✓
+   - `splitBars([0.75, 3.25])`: 0.75 is not a key of NOTE_WIDTH. Throw RangeError. ✓
+
+6. **`breakSystems(barWidths, start, gap, maxWidth)`** -
+   - Greedy line breaking by whole bars
+   - Returns groups of bar indices
+   - A system's width = start + sum of bar widths + gap * (number of bars - 1)
+   - A bar joins current system if width stays <= maxWidth
+   - Otherwise starts new system
+   - First bar of a system always goes in even if too wide
+   - No bars gives []
+   - Don't modify input
+
+   Let me verify:
+   - `breakSystems([12, 12, 12, 6], 4.8, 1, 30)`:
+     - System 1: start=4.8, add bar 0 (12): 4.8+12=16.8 <= 30 ✓. Add bar 1 (12): 16.8+1+12=29.8 <= 30 ✓. Add bar 2 (12): 29.8+1+12=42.8 > 30. Start new system.
+     - System 2: start=4.8, add bar 2 (12): 4.8+12=16.8 <= 30 ✓. Add bar 3 (6): 16.8+1+6=23.8 <= 30 ✓.
+     - Result: [[0, 1], [2, 3]] ✓
+   - `breakSystems([12, 12, 12, 6], 4.8, 1, 5)`:
+     - System 1: start=4.8, add bar 0 (12): 4.8+12=16.8 > 5. But first bar always goes in. System = [0].
+     - System 2: start=4.8, add bar 1 (12): 4.8+12=16.8 > 5. First bar always goes in. System = [1].
+     - System 3: start=4.8, add bar 2 (12): 4.8+12=16.8 > 5. First bar always goes in. System = [2].
+     - System 4: start=4.8, add bar 3 (6): 4.8+6=10.8 > 5. First bar always goes in. System = [3].
+     - Result: [[0], [1], [2], [3]] ✓
+
+Now let me think about the `breakSystems` algorithm more carefully. The width of a system with bars at indices i, i+1, ..., j is:
+`start + barWidths[i] + gap + barWidths[i+1] + gap + ... + barWidths[j]`
+= `start + sum(barWidths[i..j]) + gap * (j - i)`
+
+When trying to add a new bar to the current system, we need to check if the new width (including the gap before this bar) stays <= maxWidth.
+
+Let me think about the algorithm:
+- Start a new system with the first bar (always included)
+- For subsequent bars, check if adding them (with gap) would exceed maxWidth
+- If so, start a new system
+
+Actually, let me re-read: "A bar joins the current system if the width stays <= maxWidth; otherwise it starts a new system (whose width starts again at start). The first bar of a system always goes in, even if it is too wide."
+
+So the algorithm is:
+1. If no bars, return []
+2. Start with an empty current system
+3. For each bar index i:
+   - If current system is empty, add this bar (first bar always goes in)
+   - Otherwise, compute the width if we add this bar: currentWidth + gap + barWidths[i]
+   - If that width <= maxWidth, add it to current system
+   - Otherwise, push current system to result, start new system with this bar
+
+Wait, let me reconsider. The width of a system is `start + sum of bar widths + gap * (numBars - 1)`.
+
+When we have a current system with bars [i, i+1, ..., j], its width is:
+`start + barWidths[i] + gap + barWidths[i+1] + ... + gap + barWidths[j]`
+= `start + sum(barWidths[i..j]) + gap * (j - i)`
+
+When we try to add bar j+1, the new width would be:
+`start + sum(barWidths[i..j+1]) + gap * (j+1 - i)`
+= previous width + gap + barWidths[j+1]
+
+So the check is: `currentWidth + gap + barWidths[nextBar] <= maxWidth`
+
+Let me verify with `breakSystems([12, 12, 12, 6], 4.8, 1, 30)`:
+- System 1: start with bar 0. Width = 4.8 + 12 = 16.8.
+  - Try bar 1: 16.8 + 1 + 12 = 29.8 <= 30. Add. Width = 29.8.
+  - Try bar 2: 29.8 + 1 + 12 = 42.8 > 30. Don't add.
+  - Push [0, 1].
+- System 2: start with bar 2. Width = 4.8 + 12 = 16.8.
+  - Try bar 3: 16.8 + 1 + 6 = 23.8 <= 30. Add. Width = 23.8.
+  - Push [2, 3].
+- Result: [[0, 1], [2, 3]] ✓
+
+Now for `breakSystems([10, 10, 10], 0, 0, 20)`:
+- System 1: start with bar 0. Width = 0 + 10 = 10.
+  - Try bar 1: 10 + 0 + 10 = 20 <= 20. Add. Width = 20.
+  - Try bar 2: 20 + 0 + 10 = 30 > 20. Don't add.
+  - Push [0, 1].
+- System 2: start with bar 2. Width = 0 + 10 = 10.
+  - Push [2].
+- Result: [[0, 1], [2]] ✓
+
+Now let me write the code. I need to be careful about:
+- The type import from `../types.ts`
+- Using erasable syntax only (no enums, no namespaces, etc.)
+- No module-level mutable state
+- The `NOTE_WIDTH` constant uses `Readonly<Record<string, number>>`
+
+For `splitBars`, I need to check:
+1. Each duration must be a key of NOTE_WIDTH
+2. A note must not make a bar exceed 4
+3. The last bar must be complete (total must be a multiple of 4)
+
+Let me think about the order of checks. If a duration isn't in NOTE_WIDTH, throw immediately. If adding a note would make the current bar exceed 4, throw. At the end, if the current bar isn't complete (sum < 4), throw.
+
+Actually, looking at `splitBars([3, 2])`: 3 is valid, starts a bar with sum 3. Then 2 would make it 5 > 4, so throw. ✓
+
+And `splitBars([1, 1])`: 1 + 1 = 2, not 4. At the end, the last bar has sum 2 < 4, so throw. ✓
+
+Let me also think about whether I need to check that the total is a multiple of 4, or just that the last bar is complete. The spec says "the last bar is incomplete" - so if we finish processing all notes and the current bar's sum is less than 4, throw.
+
+Now let me write the complete file.
+
+For the `keySignature` function, I need to handle the case where both sharps and flats are 0 (C major) - return empty array.
+
+Let me also double-check the `staffPosition` formula with the `doMidi - key.accidental` part. The spec says:
+"do's diatonic number is `LETTERS.indexOf(key.tonic) + 7 * (Math.floor((key.doMidi - key.accidental) / 12) - 1)`"
+
+For Bb3: doMidi=58, accidental=-1. (58 - (-1)) / 12 = 59/12 = 4.9166... Math.floor = 4. 4 - 1 = 3. LETTERS.indexOf("B") = 6. diatonic = 6 + 7*3 = 27. position = 27 + 0 - 18 = 9. ✓
+
+For Fs4: doMidi=66, accidental=1. (66 - 1) / 12 = 65/12 = 5.4166... Math.floor = 5. 5 - 1 = 4. LETTERS.indexOf("F") = 3. diatonic = 3 + 7*4 = 31. position = 31 + 0 - 30 = 1. ✓
+
+Great, everything checks out. Let me write the code now.
+
+One thing to be careful about: the `NOTE_WIDTH` type is `Readonly<Record<string, number>>`. I'll use `as const` or just declare it with the type annotation.
+
+Actually, looking at the interface: `export const NOTE_WIDTH: Readonly<Record<string, number>> = { "0.5": 2, "1": 3, "1.5": 3.5, "2": 4, "3": 5, "4": 6 };`
+
+I'll just use that directly.
+
+For `splitBars`, I need to check if a duration is a key of NOTE_WIDTH. Since NOTE_WIDTH is a Record<string, number>, I can check `String(duration) in NOTE_WIDTH` or `NOTE_WIDTH[String(duration)] !== undefined`. Actually, since the keys are strings like "0.5", "1", "1.5", "2", "3", "4", I need to convert the number to a string. But `String(1)` gives "1", `String(1.5)` gives "1.5", `String(0.5)` gives "0.5". That should work.
+
+Wait, but what about `String(0.75)` = "0.75" which is not a key. And `String(3.25)` = "3.25" which is not a key. Good.
+
+Let me also make sure I'm not modifying the input in `breakSystems`. I'll just read from it and build new arrays.
+
+Let me write the final code now.
+<</thinking>>
+```ts
+import type { Clef, Key, Letter } from "../types.ts";
+
+export const NOTE_WIDTH: Readonly<Record<string, number>> = { "0.5": 2, "1": 3, "1.5": 3.5, "2": 4, "3": 5, "4": 6 };
+
+export function yOf(p: number): number {
+  return 4 - p / 2;
+}
+
+export function staffPosition(step: number, key: Key, clef: Clef): number {
+  const LETTERS: readonly Letter[] = ["C", "D", "E", "F", "G", "A", "B"];
+  const diatonicDo = LETTERS.indexOf(key.tonic) + 7 * (Math.floor((key.doMidi - key.accidental) / 12) - 1);
+  const bottom = clef === "treble" ? 30 : 18;
+  return diatonicDo + step - bottom;
+}
+
+export function keySignature(key: Key, clef: Clef): number[] {
+  const sharpsTreble = [8, 5, 9, 6, 3, 7, 4];
+  const flatsTreble = [4, 7, 3, 6, 2, 5, 1];
+  let positions: number[];
+  if (key.sharps > 0) {
+    positions = sharpsTreble.slice(0, key.sharps);
+  } else if (key.flats > 0) {
+    positions = flatsTreble.slice(0, key.flats);
+  } else {
+    positions = [];
+  }
+  if (clef === "bass") {
+    return positions.map((p) => p - 2);
+  }
+  return positions;
+}
+
+export function splitBars(rhythm: readonly number[]): number[][] {
+  const bars: number[][] = [];
+  let current: number[] = [];
+  let sum = 0;
+
+  for (let i = 0; i < rhythm.length; i++) {
+    const dur = rhythm[i];
+    const key = String(dur);
+    if (!(key in NOTE_WIDTH)) {
+      throw new RangeError(`Invalid duration: ${dur}`);
+    }
+    if (sum + dur > 4) {
+      throw new RangeError(`Note ${i} would exceed bar limit`);
+    }
+    current.push(i);
+    sum += dur;
+    if (sum === 4) {
+      bars.push(current);
+      current = [];
+      sum = 0;
+    }
+  }
+
+  if (current.length > 0) {
+    throw new RangeError("Last bar is incomplete");
+  }
+
+  return bars;
+}
+
+export function breakSystems(barWidths: readonly number[], start: number, gap: number, maxWidth: number): number[][] {
+  if (barWidths.length === 0) {
+    return [];
+  }
+
+  const systems: number[][] = [];
+  let current: number[] = [];
+  let currentWidth = 0;
+
+  for (let i = 0; i < barWidths.length; i++) {
+    if (current.length === 0) {
+      // First bar of a system always goes in
+      current.push(i);
+      currentWidth = start + barWidths[i];
+    } else {
+      const newWidth = currentWidth + gap + barWidths[i];
+      if (newWidth <= maxWidth) {
+        current.push(i);
+        currentWidth = newWidth;
+      } else {
+        systems.push(current);
+        current = [i];
+        currentWidth = start + barWidths[i];
+      }
+    }
+  }
+
+  if (current.length > 0) {
+    systems.push(current);
+  }
+
+  return systems;
+}
+```

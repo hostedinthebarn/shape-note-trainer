@@ -1,0 +1,87 @@
+{
+  "component": "staff",
+  "result": "pass",
+  "rung": 2,
+  "model": "qwen3.8:27b",
+  "tries": 4,
+  "seconds": 281.8,
+  "tokens_in": 25834,
+  "tokens_out": 7316,
+  "workdir": "/Users/gary/Library/Caches/packet-driver/sw48/staff/qwen3.8_27b",
+  "rungs": [
+    {
+      "component": "staff",
+      "model": "qwen3-coder:30b",
+      "num_ctx": 16384,
+      "node": "v26.12.0",
+      "result": "escalate",
+      "tries": 3,
+      "seconds": 73.4,
+      "tokens_in": 19825,
+      "tokens_out": 2169,
+      "per_try": [
+        {
+          "try": 1,
+          "pass": false,
+          "tokens_in": 5746,
+          "tokens_out": 723,
+          "seconds": 20.5,
+          "load_seconds": 0.0,
+          "wall_seconds": 20.5,
+          "oddities": []
+        },
+        {
+          "try": 2,
+          "pass": false,
+          "tokens_in": 7019,
+          "tokens_out": 723,
+          "seconds": 21.4,
+          "load_seconds": 5.7,
+          "wall_seconds": 21.4,
+          "oddities": [
+            "repeat-of-earlier-attempt(temp 0.20)"
+          ]
+        },
+        {
+          "try": 3,
+          "pass": false,
+          "tokens_in": 7060,
+          "tokens_out": 723,
+          "seconds": 31.5,
+          "load_seconds": 0.0,
+          "wall_seconds": 31.5,
+          "oddities": [
+            "repeat-of-earlier-attempt(temp 0.60)"
+          ]
+        }
+      ],
+      "workdir": "/Users/gary/Library/Caches/packet-driver/sw48/staff/qwen3-coder_30b"
+    },
+    {
+      "component": "staff",
+      "model": "qwen3.8:27b",
+      "num_ctx": 16384,
+      "node": "v26.12.0",
+      "result": "pass",
+      "tries": 1,
+      "seconds": 208.4,
+      "tokens_in": 6009,
+      "tokens_out": 5147,
+      "per_try": [
+        {
+          "try": 1,
+          "pass": true,
+          "tokens_in": 6009,
+          "tokens_out": 5147,
+          "seconds": 208.4,
+          "load_seconds": 8.4,
+          "wall_seconds": 208.5,
+          "oddities": [
+            "thinking:10473ch"
+          ]
+        }
+      ],
+      "workdir": "/Users/gary/Library/Caches/packet-driver/sw48/staff/qwen3.8_27b"
+    }
+  ]
+}

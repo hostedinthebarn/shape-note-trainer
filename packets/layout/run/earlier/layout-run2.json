@@ -1,0 +1,103 @@
+{
+  "component": "layout",
+  "result": "escalate",
+  "rung": null,
+  "model": null,
+  "tries": 5,
+  "seconds": 906.5,
+  "tokens_in": 63644,
+  "tokens_out": 26044,
+  "workdir": "/Users/gary/Library/Caches/packet-driver/sw48/layout/qwen3.8_27b",
+  "rungs": [
+    {
+      "component": "layout",
+      "model": "qwen3-coder:30b",
+      "num_ctx": 16384,
+      "node": "v26.12.0",
+      "result": "escalate",
+      "tries": 3,
+      "seconds": 344.4,
+      "tokens_in": 36283,
+      "tokens_out": 9660,
+      "per_try": [
+        {
+          "try": 1,
+          "pass": false,
+          "tokens_in": 13081,
+          "tokens_out": 3086,
+          "seconds": 180.8,
+          "load_seconds": 0.0,
+          "wall_seconds": 180.9,
+          "oddities": []
+        },
+        {
+          "try": 2,
+          "pass": false,
+          "tokens_in": 11618,
+          "tokens_out": 3282,
+          "seconds": 90.9,
+          "load_seconds": 0.0,
+          "wall_seconds": 90.9,
+          "oddities": [
+            "tests-omitted-to-fit"
+          ]
+        },
+        {
+          "try": 3,
+          "pass": false,
+          "tokens_in": 11584,
+          "tokens_out": 3292,
+          "seconds": 72.7,
+          "load_seconds": 0.0,
+          "wall_seconds": 72.7,
+          "oddities": [
+            "tests-omitted-to-fit"
+          ]
+        }
+      ],
+      "workdir": "/Users/gary/Library/Caches/packet-driver/sw48/layout/qwen3-coder_30b"
+    },
+    {
+      "component": "layout",
+      "model": "qwen3.8:27b",
+      "num_ctx": 16384,
+      "node": "v26.12.0",
+      "result": "escalate",
+      "tries": 2,
+      "seconds": 562.1,
+      "tokens_in": 27361,
+      "tokens_out": 16384,
+      "per_try": [
+        {
+          "try": 1,
+          "pass": false,
+          "tokens_in": 13671,
+          "tokens_out": 8192,
+          "seconds": 294.9,
+          "load_seconds": 0.0,
+          "wall_seconds": 294.9,
+          "oddities": [
+            "hit-max-tokens:8192",
+            "thinking:21136ch",
+            "no-code-found"
+          ]
+        },
+        {
+          "try": 2,
+          "pass": false,
+          "tokens_in": 13690,
+          "tokens_out": 8192,
+          "seconds": 267.2,
+          "load_seconds": 0.0,
+          "wall_seconds": 267.2,
+          "oddities": [
+            "hit-max-tokens:8192",
+            "thinking:19752ch",
+            "no-code-found"
+          ]
+        }
+      ],
+      "workdir": "/Users/gary/Library/Caches/packet-driver/sw48/layout/qwen3.8_27b"
+    }
+  ]
+}

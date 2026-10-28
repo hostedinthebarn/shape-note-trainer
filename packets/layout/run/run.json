@@ -1,0 +1,48 @@
+{
+  "component": "layout",
+  "model": "qwen3-coder:30b",
+  "num_ctx": 16384,
+  "node": "v26.12.0",
+  "result": "pass",
+  "tries": 3,
+  "seconds": 167.5,
+  "tokens_in": 34159,
+  "tokens_out": 7911,
+  "per_try": [
+    {
+      "try": 1,
+      "pass": false,
+      "tokens_in": 12245,
+      "tokens_out": 2636,
+      "seconds": 62.3,
+      "load_seconds": 0.0,
+      "wall_seconds": 62.3,
+      "oddities": []
+    },
+    {
+      "try": 2,
+      "pass": false,
+      "tokens_in": 10869,
+      "tokens_out": 2618,
+      "seconds": 52.7,
+      "load_seconds": 0.0,
+      "wall_seconds": 52.7,
+      "oddities": [
+        "tests-omitted-to-fit"
+      ]
+    },
+    {
+      "try": 3,
+      "pass": true,
+      "tokens_in": 11045,
+      "tokens_out": 2657,
+      "seconds": 52.5,
+      "load_seconds": 0.0,
+      "wall_seconds": 52.5,
+      "oddities": [
+        "tests-omitted-to-fit"
+      ]
+    }
+  ],
+  "workdir": "/Users/gary/Library/Caches/packet-driver/sw48/layout/qwen3-coder_30b"
+}

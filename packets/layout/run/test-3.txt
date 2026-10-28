@@ -1,0 +1,17 @@
+✔ constants (0.868417ms)
+✔ one system: heads, ledgers, stems, barlines and anchors (0.500292ms)
+✔ stems up below the middle line, down from it; fa follows the stem (0.136542ms)
+✔ dots, flags and a whole-note fa (0.113542ms)
+✔ a dotted note in a space keeps its dot in that space (0.058458ms)
+✔ key signature is pinned on every system (0.157167ms)
+✔ line breaking is greedy by whole bars (0.119667ms)
+✔ pure: same input, same layout; input untouched (0.111291ms)
+✔ bad input (0.173541ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 84.363334

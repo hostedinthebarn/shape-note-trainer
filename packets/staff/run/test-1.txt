@@ -1,0 +1,14 @@
+✔ NOTE_WIDTH (0.46375ms)
+✔ staffPosition: half-spaces above the bottom line, from the key's do (0.099708ms)
+✔ yOf: staff spaces down from the top line (0.045916ms)
+✔ keySignature: positions per clef, sharps or flats (0.097291ms)
+✔ splitBars: indices grouped into 4/4 bars (0.193375ms)
+✔ breakSystems: greedy, whole bars, gap between bars (0.0825ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 72.928458
