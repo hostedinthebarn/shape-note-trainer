@@ -1,0 +1,50 @@
+{
+  "component": "scoring",
+  "model": "qwen3-coder:30b",
+  "num_ctx": 16384,
+  "node": "v26.12.0",
+  "result": "escalate",
+  "tries": 3,
+  "seconds": 194.2,
+  "tokens_in": 29346,
+  "tokens_out": 5694,
+  "per_try": [
+    {
+      "try": 1,
+      "pass": false,
+      "tokens_in": 11957,
+      "tokens_out": 1898,
+      "seconds": 69.9,
+      "load_seconds": 0.0,
+      "wall_seconds": 70.0,
+      "oddities": []
+    },
+    {
+      "try": 2,
+      "pass": false,
+      "tokens_in": 8695,
+      "tokens_out": 1898,
+      "seconds": 63.6,
+      "load_seconds": 0.0,
+      "wall_seconds": 63.6,
+      "oddities": [
+        "tests-omitted-to-fit",
+        "repeat-of-earlier-attempt(temp 0.20)"
+      ]
+    },
+    {
+      "try": 3,
+      "pass": false,
+      "tokens_in": 8694,
+      "tokens_out": 1898,
+      "seconds": 60.7,
+      "load_seconds": 0.0,
+      "wall_seconds": 60.7,
+      "oddities": [
+        "tests-omitted-to-fit",
+        "repeat-of-earlier-attempt(temp 0.60)"
+      ]
+    }
+  ],
+  "workdir": "/Users/gary/Library/Caches/packet-driver/sw48/scoring/qwen3-coder_30b"
+}

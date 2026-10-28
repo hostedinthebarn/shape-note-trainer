@@ -1,0 +1,19 @@
+✔ constants (0.49725ms)
+✔ median: odd count is the middle value, even count is the mean of the middle two (0.173958ms)
+✔ newHold: empty (0.062042ms)
+✔ a steady in-band run is accepted when held time reaches 300 ms (0.956875ms)
+✔ band: |median| <= band (1.021208ms)
+✔ the median is over the last 200 ms of voiced readings: one outlier changes nothing (0.373792ms)
+✔ a scoop: the hold starts once the median comes into band (0.340167ms)
+✔ gaps: <= 100 ms pauses the hold, > 100 ms resets it (0.903083ms)
+✔ out of band resets the hold (0.482166ms)
+✔ recentMedian: voiced readings newer than now - 200, or null (0.191625ms)
+✔ pure: holdReading never changes its input (1.108166ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 80.563833

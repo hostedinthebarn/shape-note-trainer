@@ -1,0 +1,30 @@
+✔ constants (0.537542ms)
+✔ fold: e - 1200 * Math.round(e / 1200) (0.097459ms)
+✔ noteTime: time the current note has been current, excluding tone time (0.391541ms)
+✔ a steady in-tune note is accepted after 300 ms of hold (0.413625ms)
+✔ while holding: status holding, not yet accepted at 290 ms (0.226042ms)
+✔ octave-folded: an octave above or below do still counts as do (1.287334ms)
+✔ band edges: ±50 cents normally, ±25 in strict mode (5.904875ms)
+✔ median smoothing: a single wild reading does not break the hold (0.191833ms)
+✔ median smoothing: a scoop from 100 cents flat settles once the median is in band (0.400334ms)
+✔ gaps: up to 100 ms pauses the hold, more than 100 ms resets it (0.73075ms)
+✔ tone gating: readings are ignored during a tone and for 150 ms after it ends (0.264291ms)
+✔ a tone during a hold resets it (0.260417ms)
+✔ hint clock: offered after 8 s of current-note time, paused by tones (1.822667ms)
+✔ hint makes the note helped; skip makes it skipped and starts the next note (0.586208ms)
+✔ the attempt finishes after the last note; later events change nothing (0.182167ms)
+✔ consecutive notes: do, re, mi sung straight through (0.363583ms)
+✔ wrong degree: the view names the degree being sung when it isn't the target (0.44ms)
+✔ listening: no voiced reading in the last 200 ms (0.096167ms)
+✔ pure: step never changes its input state, and the state is plain data (2.161458ms)
+✔ init rejects bad config (0.186583ms)
+✔ replay: Gary's real do on C3 and G2 is accepted, unaided, a little flat (the tone itself is gated out) (0.559417ms)
+✔ replay: the same singing is not accepted as sol or mi (2.427541ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 105.232916
