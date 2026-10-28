@@ -6,7 +6,7 @@ import { stripTypeScriptTypes } from "node:module";
 import { join, dirname, relative, extname } from "node:path";
 
 /** Files copied from static/ into public/, by name. Add to this list deliberately. */
-const STATIC = ["index.html"];
+const STATIC = ["index.html", "font/Bravura.woff2", "font/OFL.txt"];
 /** The only extensions allowed in public/ at all. */
 const ALLOWED_EXT = new Set([".html", ".css", ".js", ".webmanifest", ".woff2", ".svg", ".png", ".txt"]);
 /** Deploy rule: any hit aborts the build. */
