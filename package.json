@@ -1,0 +1,10 @@
+{
+  "name": "shape-note-trainer",
+  "private": true,
+  "type": "module",
+  "description": "Sight-read 7-shape (Aikin) notation by singing into your phone. No dependencies.",
+  "scripts": {
+    "test": "node --test",
+    "build": "node --no-warnings build.mjs"
+  }
+}
