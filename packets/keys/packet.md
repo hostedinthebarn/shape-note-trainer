@@ -21,7 +21,7 @@ import type { Key, Letter, Melody } from "../types.ts";
 import { MAJOR_SEMITONES } from "../types.ts";
 
 /** Keys with more sharps or flats than this are never offered as candidates. */
-export const MAX_ACCIDENTALS = 4;
+export const MAX_ACCIDENTALS = 5;
 
 /** How far (in semitones) a candidate key's do may be from the singer's do. */
 export const KEY_SPREAD = 3;
@@ -83,14 +83,14 @@ export function pickKey(melody: Melody, singerDo: number, alwaysMyDo: boolean, r
 | `noteMidi(-3, 60)` | 55 |
 | `noteMidi(9, 60)` | 76 (mi in the octave above) |
 | `noteMidi(-8, 60)` | 47 (ti, an octave below ti below) |
-| `fittingKeys({ degrees: [0, 1, 2, 1, 0], rhythm: [1, 1, 1, 1, 4] }, 60)` | keys with doMidi 57 (A), 58 (B♭), 60 (C), 62 (D), 63 (E♭): 59 (B, 5 sharps) and 61 (D♭, 5 flats) are excluded |
+| `fittingKeys({ degrees: [0, 1, 2, 1, 0], rhythm: [1, 1, 1, 1, 4] }, 60)` | keys with doMidi 57 … 63 (A, B♭, B, C, D♭, D, E♭) |
 | same melody with degrees -3 … 7 used, singer 60 | only C (doMidi 60): the melody fills the whole range |
-| degrees 0 … 7, singer 60 | doMidi 57, 58, 60 |
-| degrees -3 … 4, singer 60 | doMidi 60, 62, 63 |
-| degrees -3 … 7, singer 61 | `[]` (only D♭ fits, and it has 5 flats) |
-| `pickKey(m, 61, false, rand)` with degrees -3 … 7 | `keyForDo(61)` (D♭), rand not called |
-| `pickKey(m, 61, true, rand)` | `keyForDo(61)`, rand not called |
-| `pickKey(m, 60, false, () => 0.5)` with the first melody (5 keys) | doMidi 60 (index 2) |
+| degrees 0 … 7, singer 60 | doMidi 57, 58, 59, 60 |
+| degrees -3 … 4, singer 60 | doMidi 60, 61, 62, 63 |
+| degrees -3 … 7, singer 66 | `[]` (only F♯ fits, and it has 6 sharps) |
+| `pickKey(m, 66, false, rand)` with degrees -3 … 7 | `keyForDo(66)` (F♯), rand not called |
+| `pickKey(m, 66, true, rand)` | `keyForDo(66)`, rand not called |
+| `pickKey(m, 60, false, () => 0.5)` with the first melody (7 keys) | doMidi 60 (index 3) |
 
 ## Constraints
 

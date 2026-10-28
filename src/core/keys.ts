@@ -1,7 +1,7 @@
 import type { Key, Letter, Melody } from "../types.ts";
 import { MAJOR_SEMITONES } from "../types.ts";
 
-export const MAX_ACCIDENTALS = 4;
+export const MAX_ACCIDENTALS = 5;
 export const KEY_SPREAD = 3;
 
 const SPELLING: Array<{ tonic: Letter; accidental: -1 | 0 | 1; sharps: number; flats: number }> = [

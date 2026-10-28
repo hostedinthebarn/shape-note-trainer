@@ -18,7 +18,7 @@ const LOW = mel([0, -1, -3, -1, 0, 2, 4, 2, 0]);       // sol below to sol: -5 �
 const dos = (keys: { doMidi: number }[]) => keys.map((k) => k.doMidi);
 
 test("constants", () => {
-  assert.equal(MAX_ACCIDENTALS, 4);
+  assert.equal(MAX_ACCIDENTALS, 5);
   assert.equal(KEY_SPREAD, 3);
 });
 
@@ -55,29 +55,32 @@ test("noteMidi: scale steps to MIDI notes", () => {
 });
 
 test("fittingKeys: candidates within 3 semitones, at most 4 sharps or flats, melody in range", () => {
-  assert.deepEqual(dos(fittingKeys(SMALL, 60)), [57, 58, 60, 62, 63],
-    "small melody, singer do 60: every do from 57 to 63 fits the range; 59 (B, 5 sharps) and 61 (D flat, 5 flats) are dropped for too many accidentals");
+  assert.deepEqual(dos(fittingKeys(SMALL, 60)), [57, 58, 59, 60, 61, 62, 63],
+    "small melody, singer do 60: every do from 57 to 63 fits the range, and none has more than 5 sharps or flats (B has 5 sharps, D flat 5 flats)");
+  assert.deepEqual(dos(fittingKeys(SMALL, 63)), [60, 61, 62, 63, 64, 65],
+    "singer do 63: 66 (F sharp, 6 sharps) is dropped for too many accidentals");
   assert.deepEqual(dos(fittingKeys(FULL, 60)), [60],
     "melody from sol below to do above fills the singer's whole range (55 … 72), so only the singer's own do fits");
-  assert.deepEqual(dos(fittingKeys(UP, 60)), [57, 58, 60],
+  assert.deepEqual(dos(fittingKeys(UP, 60)), [57, 58, 59, 60],
     "melody do … do above: the top note doMidi + 12 must be <= 72, so do <= 60");
-  assert.deepEqual(dos(fittingKeys(LOW, 60)), [60, 62, 63],
+  assert.deepEqual(dos(fittingKeys(LOW, 60)), [60, 61, 62, 63],
     "melody sol below … sol: the bottom note doMidi - 5 must be >= 55, so do >= 60");
-  assert.deepEqual(dos(fittingKeys(UP, 61)), [58, 60],
-    "singer do 61: do 58 … 61 keep the top note <= 73; 59 and 61 have 5 accidentals");
-  assert.deepEqual(fittingKeys(FULL, 61), [], "singer do 61, full-range melody: only 61 fits the range, and D flat has 5 flats");
+  assert.deepEqual(dos(fittingKeys(UP, 61)), [58, 59, 60, 61],
+    "singer do 61: do 58 … 61 keep the top note <= 73");
+  assert.deepEqual(fittingKeys(FULL, 66), [], "singer do 66, full-range melody: only 66 fits the range, and F sharp has 6 sharps");
 });
 
 test("fittingKeys returns complete keys in ascending order", () => {
   const keys = fittingKeys(SMALL, 60);
   assert.deepEqual(keys[0], { tonic: "A", accidental: 0, sharps: 3, flats: 0, doMidi: 57 });
   assert.deepEqual(keys[1], { tonic: "B", accidental: -1, sharps: 0, flats: 2, doMidi: 58 });
-  assert.deepEqual(keys[4], { tonic: "E", accidental: -1, sharps: 0, flats: 3, doMidi: 63 });
+  assert.deepEqual(keys[2], { tonic: "B", accidental: 0, sharps: 5, flats: 0, doMidi: 59 });
+  assert.deepEqual(keys[6], { tonic: "E", accidental: -1, sharps: 0, flats: 3, doMidi: 63 });
   for (const singerDo of [43, 48, 55, 58, 60, 62, 66, 70]) {
     const got = fittingKeys(SMALL, singerDo);
     for (const k of got) {
       assert.ok(Math.abs(k.doMidi - singerDo) <= 3, `singer ${singerDo}: key do ${k.doMidi} is more than 3 semitones away`);
-      assert.ok(k.sharps <= 4 && k.flats <= 4, `singer ${singerDo}: key do ${k.doMidi} has too many accidentals`);
+      assert.ok(k.sharps <= 5 && k.flats <= 5, `singer ${singerDo}: key do ${k.doMidi} has too many accidentals`);
       assert.deepEqual(k, keyForDo(k.doMidi), "RULE: each key is spelled exactly as keyForDo spells it");
     }
     assert.deepEqual(dos(got), [...dos(got)].sort((a, b) => a - b), `singer ${singerDo}: RULE: ascending doMidi`);
@@ -89,18 +92,18 @@ test("fittingKeys returns complete keys in ascending order", () => {
 test("pickKey: always-my-do and the empty-list fallback use the singer's do without calling rand", () => {
   let calls = 0;
   const rand = () => { calls++; return 0.5; };
-  assert.deepEqual(pickKey(SMALL, 61, true, rand), keyForDo(61), "RULE: alwaysMyDo gives keyForDo(singerDo) even with 5 flats");
+  assert.deepEqual(pickKey(SMALL, 66, true, rand), keyForDo(66), "RULE: alwaysMyDo gives keyForDo(singerDo) even with 6 sharps");
   assert.deepEqual(pickKey(SMALL, 60, true, rand), keyForDo(60));
-  assert.deepEqual(pickKey(FULL, 61, false, rand), keyForDo(61), "RULE: when no key fits, fall back to keyForDo(singerDo)");
+  assert.deepEqual(pickKey(FULL, 66, false, rand), keyForDo(66), "RULE: when no key fits, fall back to keyForDo(singerDo)");
   assert.equal(calls, 0, "RULE: rand must not be called for alwaysMyDo or the fallback");
 });
 
 test("pickKey: one rand() call indexes the fitting keys", () => {
   const seq = (v: number) => { let calls = 0; return { rand: () => { calls++; return v; }, calls: () => calls }; };
-  const cases: Array<[number, number]> = [[0, 57], [0.2, 58], [0.5, 60], [0.7, 62], [0.999, 63]];
+  const cases: Array<[number, number]> = [[0, 57], [0.2, 58], [0.5, 60], [0.7, 61], [0.999, 63]];
   for (const [v, want] of cases) {
     const r = seq(v);
-    assert.equal(pickKey(SMALL, 60, false, r.rand).doMidi, want, `rand ${v} over 5 keys: RULE: keys[Math.floor(rand() * keys.length)]`);
+    assert.equal(pickKey(SMALL, 60, false, r.rand).doMidi, want, `rand ${v} over 7 keys: RULE: keys[Math.floor(rand() * keys.length)]`);
     assert.equal(r.calls(), 1, "RULE: rand is called exactly once when choosing");
   }
   const one = seq(0.9);
