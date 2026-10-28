@@ -1,0 +1,99 @@
+{
+  "component": "mpm",
+  "result": "escalate",
+  "rung": null,
+  "model": null,
+  "tries": 5,
+  "seconds": 684.5,
+  "tokens_in": 29541,
+  "tokens_out": 20699,
+  "workdir": "/Users/gary/Library/Caches/packet-driver/sw46/mpm/qwen3.8_27b",
+  "rungs": [
+    {
+      "component": "mpm",
+      "model": "qwen3-coder:30b",
+      "num_ctx": 16384,
+      "node": "v26.12.0",
+      "result": "escalate",
+      "tries": 3,
+      "seconds": 155.2,
+      "tokens_in": 18974,
+      "tokens_out": 4315,
+      "per_try": [
+        {
+          "try": 1,
+          "pass": false,
+          "tokens_in": 5063,
+          "tokens_out": 1497,
+          "seconds": 62.2,
+          "load_seconds": 1.5,
+          "wall_seconds": 62.2,
+          "oddities": []
+        },
+        {
+          "try": 2,
+          "pass": false,
+          "tokens_in": 7000,
+          "tokens_out": 1409,
+          "seconds": 50.3,
+          "load_seconds": 0.0,
+          "wall_seconds": 50.3,
+          "oddities": []
+        },
+        {
+          "try": 3,
+          "pass": false,
+          "tokens_in": 6911,
+          "tokens_out": 1409,
+          "seconds": 42.7,
+          "load_seconds": 0.0,
+          "wall_seconds": 42.7,
+          "oddities": []
+        }
+      ],
+      "workdir": "/Users/gary/Library/Caches/packet-driver/sw46/mpm/qwen3-coder_30b"
+    },
+    {
+      "component": "mpm",
+      "model": "qwen3.8:27b",
+      "num_ctx": 16384,
+      "node": "v26.12.0",
+      "result": "escalate",
+      "tries": 2,
+      "seconds": 529.3,
+      "tokens_in": 10567,
+      "tokens_out": 16384,
+      "per_try": [
+        {
+          "try": 1,
+          "pass": false,
+          "tokens_in": 5274,
+          "tokens_out": 8192,
+          "seconds": 259.3,
+          "load_seconds": 5.9,
+          "wall_seconds": 259.3,
+          "oddities": [
+            "hit-max-tokens:8192",
+            "thinking:25107ch",
+            "no-code-found"
+          ]
+        },
+        {
+          "try": 2,
+          "pass": false,
+          "tokens_in": 5293,
+          "tokens_out": 8192,
+          "seconds": 270.0,
+          "load_seconds": 0.0,
+          "wall_seconds": 270.0,
+          "oddities": [
+            "hit-max-tokens:8192",
+            "thinking:25410ch",
+            "no-code-found"
+          ]
+        }
+      ],
+      "workdir": "/Users/gary/Library/Caches/packet-driver/sw46/mpm/qwen3.8_27b"
+    }
+  ]
+}

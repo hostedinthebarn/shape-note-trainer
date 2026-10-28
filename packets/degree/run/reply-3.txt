@@ -1,0 +1,96 @@
+```ts
+import type { Degree, DegreeReading } from "../types.ts";
+import { DEGREES, MAJOR_SEMITONES } from "../types.ts";
+
+/** The nearest major-scale degree to `hz`, given the frequency of do.
+ *
+ *  Method (twelve-tone equal temperament):
+ *  1. s = 12 * log2(hz / doHz), the signed distance from do in (fractional) semitones.
+ *  2. Every scale tone has a semitone position p = 12 * octave + MAJOR_SEMITONES[index],
+ *     for any integer octave (negative too). Pick the scale tone with the smallest |s - p|.
+ *     If two are exactly equally near (a chromatic note between two whole-tone degrees),
+ *     pick the lower one.
+ *  3. cents = 100 * (s - p). It is always within [-100, +100], and within [-50, +50]
+ *     when the nearest neighbours are a semitone apart (mi/fa, ti/do).
+ *
+ *  Throws RangeError if hz or doHz is not a finite number > 0. */
+export function hzToDegree(hz: number, doHz: number): DegreeReading {
+  if (!Number.isFinite(hz) || hz <= 0) throw new RangeError("hz must be a finite number > 0");
+  if (!Number.isFinite(doHz) || doHz <= 0) throw new RangeError("doHz must be a finite number > 0");
+
+  const s = 12 * Math.log2(hz / doHz);
+  let bestIndex = -1;
+  let bestOctave = 0;
+  let bestDistance = Infinity;
+
+  // Check a few octaves around the natural octave
+  for (let octave = Math.floor(s / 12) - 1; octave <= Math.floor(s / 12) + 1; octave++) {
+    for (let i = 0; i < 7; i++) {
+      const p = 12 * octave + MAJOR_SEMITONES[i];
+      const distance = Math.abs(s - p);
+      if (distance < bestDistance || (distance === bestDistance && (bestIndex === -1 || i < bestIndex))) {
+        bestDistance = distance;
+        bestIndex = i;
+        bestOctave = octave;
+      }
+    }
+  }
+
+  const p = 12 * bestOctave + MAJOR_SEMITONES[bestIndex];
+  const cents = 100 * (s - p);
+
+  return {
+    degree: DEGREES[bestIndex],
+    index: bestIndex,
+    octave: bestOctave,
+    cents
+  };
+}
+
+/** Frequency of `degree` in `octave` (0 = the octave starting on do), given do's frequency.
+ *  hz = doHz * 2 ** ((12 * octave + MAJOR_SEMITONES[index]) / 12).
+ *  Throws RangeError if doHz is not a finite number > 0, octave is not an integer,
+ *  or degree is not one of the seven degrees. */
+export function degreeToHz(degree: Degree, octave: number, doHz: number): number {
+  if (!Number.isFinite(doHz) || doHz <= 0) throw new RangeError("doHz must be a finite number > 0");
+  if (!Number.isInteger(octave)) throw new RangeError("octave must be an integer");
+  const index = DEGREES.indexOf(degree);
+  if (index === -1) throw new RangeError("degree must be one of the seven degrees");
+
+  return doHz * 2 ** ((12 * octave + MAJOR_SEMITONES[index]) / 12);
+}
+
+/** Where `hz` sits on the scale, in scale steps from do (0 = do, 1 = re … 7 = do above,
+ *  -1 = ti below, -3 = sol below), as a real number for drawing.
+ *
+ *  Method:
+ *  1. s = 12 * log2(hz / doHz), as in hzToDegree.
+ *  2. octave = Math.floor(s / 12); r = s - 12 * octave, so 0 <= r < 12.
+ *  3. Find the scale index i (0..6) with MAJOR_SEMITONES[i] <= r < next, where next is
+ *     MAJOR_SEMITONES[i + 1], or 12 when i is 6.
+ *  4. Return 7 * octave + i + (r - MAJOR_SEMITONES[i]) / (next - MAJOR_SEMITONES[i]).
+ *  So scale tones land on whole numbers and a pitch between two scale tones is placed linearly
+ *  between them (C sharp with do = C is 0.5; F sharp is 3.5, because fa to sol is a whole tone).
+ *
+ *  Throws RangeError if hz or doHz is not a finite number > 0. */
+export function scalePosition(hz: number, doHz: number): number {
+  if (!Number.isFinite(hz) || hz <= 0) throw new RangeError("hz must be a finite number > 0");
+  if (!Number.isFinite(doHz) || doHz <= 0) throw new RangeError("doHz must be a finite number > 0");
+
+  const s = 12 * Math.log2(hz / doHz);
+  const octave = Math.floor(s / 12);
+  const r = s - 12 * octave;
+
+  let i;
+  for (i = 0; i < 6; i++) {
+    if (MAJOR_SEMITONES[i] <= r && r < MAJOR_SEMITONES[i + 1]) break;
+  }
+  // If we didn't find it, it's the last one
+  if (i === 6 || r >= MAJOR_SEMITONES[6]) i = 6;
+
+  const next = i === 6 ? 12 : MAJOR_SEMITONES[i + 1];
+  const position = 7 * octave + i + (r - MAJOR_SEMITONES[i]) / (next - MAJOR_SEMITONES[i]);
+
+  return position;
+}
+```

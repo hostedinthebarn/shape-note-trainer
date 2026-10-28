@@ -1,0 +1,37 @@
+{
+  "component": "mpm",
+  "result": "pass",
+  "rung": 1,
+  "model": "qwen3-coder:30b",
+  "tries": 1,
+  "seconds": 59.6,
+  "tokens_in": 5063,
+  "tokens_out": 1577,
+  "workdir": "/Users/gary/Library/Caches/packet-driver/sw46b/mpm/qwen3-coder_30b",
+  "rungs": [
+    {
+      "component": "mpm",
+      "model": "qwen3-coder:30b",
+      "num_ctx": 16384,
+      "node": "v26.12.0",
+      "result": "pass",
+      "tries": 1,
+      "seconds": 59.6,
+      "tokens_in": 5063,
+      "tokens_out": 1577,
+      "per_try": [
+        {
+          "try": 1,
+          "pass": true,
+          "tokens_in": 5063,
+          "tokens_out": 1577,
+          "seconds": 59.6,
+          "load_seconds": 1.5,
+          "wall_seconds": 59.6,
+          "oddities": []
+        }
+      ],
+      "workdir": "/Users/gary/Library/Caches/packet-driver/sw46b/mpm/qwen3-coder_30b"
+    }
+  ]
+}

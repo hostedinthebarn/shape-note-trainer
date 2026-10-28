@@ -1,0 +1,15 @@
+✔ shapeFor: every degree x fill x stem (42 cases) (0.404292ms)
+✔ shapeFor: only fa changes with stem direction (0.267333ms)
+✔ shapeFor: rejects bad input (0.502125ms)
+✔ isDegree (0.056542ms)
+✔ degreeFromStep (0.085625ms)
+✔ fillForDuration (0.080292ms)
+✔ glyphChar (0.037875ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 81.582834

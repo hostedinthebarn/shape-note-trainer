@@ -1,0 +1,22 @@
+✔ in-tune degrees of C major, octave 0 (0.508833ms)
+✔ octaves above and below do (0.109709ms)
+✔ sharp and flat readings (0.060458ms)
+✔ chromatic notes go to the nearer whole-tone neighbour (0.050916ms)
+✔ another key: do = G3 (0.046416ms)
+✔ hzToDegree rejects bad input (0.178833ms)
+✔ degreeToHz (0.052167ms)
+✔ degreeToHz and hzToDegree round-trip (0.11175ms)
+✔ degreeToHz rejects bad input (0.0645ms)
+✔ scalePosition: scale tones land on whole steps from do (0.189709ms)
+✔ scalePosition: between scale tones, linear in semitones (0.073209ms)
+✔ scalePosition is continuous and increasing (0.3355ms)
+✔ scalePosition agrees with hzToDegree on scale tones, in any call order (0.095708ms)
+✔ scalePosition rejects bad input (0.075208ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 86.5015
