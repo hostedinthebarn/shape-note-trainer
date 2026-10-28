@@ -1,0 +1,20 @@
+✔ constants (0.417583ms)
+✔ summarize: all unaided is clean (0.30175ms)
+✔ summarize: counts, trouble notes and a sharp lean (0.098625ms)
+✔ summarize: lean thresholds are strict (0.068083ms)
+✔ summarize: no cents, no notes (0.066541ms)
+✔ summarize does not modify its input and gives the same answer every time (0.10525ms)
+✔ progress: three clean in a row suggests moving up (1.95975ms)
+✔ progress: the streak counts back from the latest attempt at the level (0.111083ms)
+✔ progress: no suggestion beyond the top level (0.081375ms)
+✔ progress: strict and normal attempts count the same (0.080667ms)
+✔ progress does not modify its input (0.104208ms)
+✔ progress rejects bad levels (0.193292ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 93.072917

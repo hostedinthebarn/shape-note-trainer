@@ -1,0 +1,18 @@
+✔ constants (0.323834ms)
+✔ keyForDo spells every pitch class from the table, in every octave (0.3405ms)
+✔ keyForDo returns a new object each time (0.333333ms)
+✔ keyForDo rejects bad input (0.152542ms)
+✔ noteMidi: scale steps to MIDI notes (0.095834ms)
+✔ fittingKeys: candidates within 3 semitones, at most 4 sharps or flats, melody in range (0.105291ms)
+✔ fittingKeys returns complete keys in ascending order (0.162375ms)
+✔ pickKey: always-my-do and the empty-list fallback use the singer's do without calling rand (0.046708ms)
+✔ pickKey: one rand() call indexes the fitting keys (0.094417ms)
+✔ pickKey never calls Math.random and gives the same key for the same rand (0.149125ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 78.8165

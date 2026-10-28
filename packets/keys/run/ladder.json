@@ -1,0 +1,83 @@
+{
+  "component": "keys",
+  "result": "pass",
+  "rung": 2,
+  "model": "qwen3.8:27b",
+  "tries": 4,
+  "seconds": 237.3,
+  "tokens_in": 33892,
+  "tokens_out": 8093,
+  "workdir": "/Users/gary/Library/Caches/packet-driver/sw46b/keys/qwen3.8_27b",
+  "rungs": [
+    {
+      "component": "keys",
+      "model": "qwen3-coder:30b",
+      "num_ctx": 16384,
+      "node": "v26.12.0",
+      "result": "escalate",
+      "tries": 3,
+      "seconds": 135.4,
+      "tokens_in": 26669,
+      "tokens_out": 4950,
+      "per_try": [
+        {
+          "try": 1,
+          "pass": false,
+          "tokens_in": 6879,
+          "tokens_out": 1650,
+          "seconds": 60.8,
+          "load_seconds": 1.5,
+          "wall_seconds": 60.8,
+          "oddities": []
+        },
+        {
+          "try": 2,
+          "pass": false,
+          "tokens_in": 9895,
+          "tokens_out": 1650,
+          "seconds": 41.7,
+          "load_seconds": 0.0,
+          "wall_seconds": 41.7,
+          "oddities": []
+        },
+        {
+          "try": 3,
+          "pass": false,
+          "tokens_in": 9895,
+          "tokens_out": 1650,
+          "seconds": 32.9,
+          "load_seconds": 0.0,
+          "wall_seconds": 32.9,
+          "oddities": []
+        }
+      ],
+      "workdir": "/Users/gary/Library/Caches/packet-driver/sw46b/keys/qwen3-coder_30b"
+    },
+    {
+      "component": "keys",
+      "model": "qwen3.8:27b",
+      "num_ctx": 16384,
+      "node": "v26.12.0",
+      "result": "pass",
+      "tries": 1,
+      "seconds": 101.9,
+      "tokens_in": 7223,
+      "tokens_out": 3143,
+      "per_try": [
+        {
+          "try": 1,
+          "pass": true,
+          "tokens_in": 7223,
+          "tokens_out": 3143,
+          "seconds": 101.9,
+          "load_seconds": 0.0,
+          "wall_seconds": 101.9,
+          "oddities": [
+            "thinking:4905ch"
+          ]
+        }
+      ],
+      "workdir": "/Users/gary/Library/Caches/packet-driver/sw46b/keys/qwen3.8_27b"
+    }
+  ]
+}

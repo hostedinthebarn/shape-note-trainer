@@ -1,0 +1,16 @@
+✔ checker accepts all 24 real exercises from the drills (1.04875ms)
+✔ checker rejects broken exercises (0.135417ms)
+✔ every generated exercise obeys every rule (8 levels x 300 seeds) (18.170542ms)
+✔ same seed gives the same exercise; the PRNG passed in is the only randomness (1.011792ms)
+✔ different seeds give varied exercises (3.759542ms)
+✔ weights: level 5 prefers thirds (x3) over steps (x1.5) (1.910833ms)
+✔ weights: going straight back to the previous note is discouraged (x0.4) (1.387333ms)
+✔ impossible settings throw an Error instead of looping forever (0.520208ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 110.706167

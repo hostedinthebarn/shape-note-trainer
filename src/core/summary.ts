@@ -1,0 +1,115 @@
+import type { NoteResult, Attempt } from "../types.ts";
+
+/** A mean error beyond this many cents (strictly greater) is reported as a lean. */
+export const LEAN_CENTS = 15;
+/** Clean attempts in a row at a level before moving up is suggested. */
+export const CLEAN_TO_SUGGEST = 3;
+/** The highest level; there is nothing to move up to from here. */
+export const TOP_LEVEL = 8;
+
+export interface Summary {
+  /** Number of notes (results.length). */
+  total: number;
+  unaided: number;
+  helped: number;
+  skipped: number;
+  /** Indices (into results) of the notes that were helped or skipped, ascending. */
+  trouble: number[];
+  /** Mean of `cents` over the notes whose cents is a number (unaided and helped); null if there are none. */
+  meanCents: number | null;
+  /** "sharp" if meanCents > LEAN_CENTS, "flat" if meanCents < -LEAN_CENTS, otherwise null. */
+  lean: "sharp" | "flat" | null;
+  /** True when there is at least one note and every note is unaided. */
+  clean: boolean;
+}
+
+/** Summarise one attempt's results. Does not modify `results`. */
+export function summarize(results: readonly NoteResult[]): Summary {
+  let total = 0;
+  let unaided = 0;
+  let helped = 0;
+  let skipped = 0;
+  const trouble: number[] = [];
+  let sumCents = 0;
+  let countCents = 0;
+
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i];
+    total++;
+    if (result.outcome === "unaided") {
+      unaided++;
+      if (typeof result.cents === "number") {
+        sumCents += result.cents;
+        countCents++;
+      }
+    } else if (result.outcome === "helped") {
+      helped++;
+      trouble.push(i);
+      if (typeof result.cents === "number") {
+        sumCents += result.cents;
+        countCents++;
+      }
+    } else if (result.outcome === "skipped") {
+      skipped++;
+      trouble.push(i);
+    }
+  }
+
+  const meanCents = countCents > 0 ? sumCents / countCents : null;
+  const lean = meanCents !== null
+    ? meanCents > LEAN_CENTS ? "sharp" : meanCents < -LEAN_CENTS ? "flat" : null
+    : null;
+
+  const clean = total > 0 && unaided === total;
+
+  return {
+    total,
+    unaided,
+    helped,
+    skipped,
+    trouble,
+    meanCents,
+    lean,
+    clean
+  };
+}
+
+export interface Progress {
+  level: number;
+  /** How many of the most recent attempts at this level were clean, counting back from the
+   *  latest and stopping at the first one that wasn't. Attempts at other levels are ignored
+   *  (they neither count nor break the streak). */
+  cleanStreak: number;
+  /** cleanStreak >= CLEAN_TO_SUGGEST and level < TOP_LEVEL. */
+  suggestUp: boolean;
+}
+
+/** Progress at `level`, from the singer's attempts in the order they were sung (oldest first).
+ *  An attempt is at a level when attempt.exercise.level equals it; it is clean when
+ *  summarize(attempt.results).clean. Does not modify `attempts`.
+ *  Throws RangeError if level is not an integer from 1 to TOP_LEVEL. */
+export function progress(attempts: readonly Attempt[], level: number): Progress {
+  if (!Number.isInteger(level) || level < 1 || level > TOP_LEVEL) {
+    throw new RangeError(`Level must be an integer from 1 to ${TOP_LEVEL}`);
+  }
+
+  let cleanStreak = 0;
+  for (let i = attempts.length - 1; i >= 0; i--) {
+    const attempt = attempts[i];
+    if (attempt.exercise.level !== level) continue;
+    const summary = summarize(attempt.results);
+    if (summary.clean) {
+      cleanStreak++;
+    } else {
+      break;
+    }
+  }
+
+  const suggestUp = cleanStreak >= CLEAN_TO_SUGGEST && level < TOP_LEVEL;
+
+  return {
+    level,
+    cleanStreak,
+    suggestUp
+  };
+}

@@ -1,0 +1,210 @@
+<<thinking>>
+Let me analyze the specification carefully and implement `src/core/keys.ts`.
+
+Key requirements:
+1. `MAX_ACCIDENTALS = 4` and `KEY_SPREAD = 3` constants
+2. `keyForDo(doMidi)` - spells a major key from a lookup table by pitch class
+3. `noteMidi(step, doMidi)` - converts scale step to MIDI note
+4. `fittingKeys(melody, singerDo)` - finds keys that fit a melody for a singer
+5. `pickKey(melody, singerDo, alwaysMyDo, rand)` - picks a key
+
+Let me work through each function:
+
+**keyForDo(doMidi):**
+- Validate: must be integer 0-127
+- Look up pitch class (doMidi % 12) in the table
+- Return new object with { tonic, accidental, sharps, flats, doMidi }
+
+The table:
+| pc | tonic | accidental | sharps | flats |
+| 0  | C     | 0          | 0      | 0     |
+| 1  | D     | -1         | 0      | 5     |
+| 2  | D     | 0          | 2      | 0     |
+| 3  | E     | -1         | 0      | 3     |
+| 4  | E     | 0          | 4      | 0     |
+| 5  | F     | 0          | 0      | 1     |
+| 6  | F     | 1          | 6      | 0     |
+| 7  | G     | 0          | 1      | 0     |
+| 8  | A     | -1         | 0      | 4     |
+| 9  | A     | 0          | 3      | 0     |
+| 10 | B     | -1         | 0      | 2     |
+| 11 | B     | 0          | 5      | 0     |
+
+**noteMidi(step, doMidi):**
+- Validate: both must be integers
+- Formula: doMidi + 12 * Math.floor(step / 7) + MAJOR_SEMITONES[((step % 7) + 7) % 7]
+
+**fittingKeys(melody, singerDo):**
+- Validate: singerDo must be integer 5-115
+- For each doMidi from singerDo - 3 to singerDo + 3:
+  - Get key = keyForDo(doMidi)
+  - Check sharps <= MAX_ACCIDENTALS AND flats <= MAX_ACCIDENTALS
+  - Check every note of melody is in range [singerDo - 5, singerDo + 12]
+  - If all pass, include the key
+- Return in ascending doMidi order
+
+**pickKey(melody, singerDo, alwaysMyDo, rand):**
+- If alwaysMyDo: return keyForDo(singerDo), don't call rand
+- Otherwise: get fittingKeys, if empty return keyForDo(singerDo), don't call rand
+- Otherwise: call rand() once, return keys[Math.floor(rand() * keys.length)]
+
+Let me check the test for `fittingKeys(UP, 61)`:
+- UP = mel([0, 2, 4, 7, 6, 4, 2, 0]) - degrees 0 to 7
+- singerDo = 61, range is 56 to 73
+- Candidate doMidi: 58, 59, 60, 61, 62, 63, 64
+- For each, check if all notes fit in [56, 73]
+- The highest degree is 7, so highest note = doMidi + 12
+- doMidi + 12 <= 73 → doMidi <= 61
+- The lowest degree is 0, so lowest note = doMidi
+- doMidi >= 56
+- So doMidi in [56, 61] ∩ [58, 64] = [58, 61]
+- 58: B♭ (flats=2) ✓
+- 59: B (sharps=5) ✗
+- 60: C (sharps=0) ✓
+- 61: D♭ (flats=5) ✗
+- Result: [58, 60] ✓
+
+For `fittingKeys(FULL, 61)`:
+- FULL = mel([0, -1, -3, 0, 4, 7, 6, 4, 2, 0]) - degrees -3 to 7
+- singerDo = 61, range is 56 to 73
+- Lowest note: doMidi + 12*floor(-3/7) + MAJOR_SEMITONES[((-3%7)+7)%7] = doMidi + 12*(-1) + MAJOR_SEMITONES[4] = doMidi - 12 + 7 = doMidi - 5
+- Highest note: doMidi + 12*floor(7/7) + MAJOR_SEMITONES[((7%7)+7)%7] = doMidi + 12 + MAJOR_SEMITONES[0] = doMidi + 12
+- So range needed: [doMidi - 5, doMidi + 12] ⊆ [56, 73]
+- doMidi - 5 >= 56 → doMidi >= 61
+- doMidi + 12 <= 73 → doMidi <= 61
+- So only doMidi = 61
+- 61: D♭ (flats=5) ✗
+- Result: [] ✓
+
+Now let me think about the `noteMidi` formula more carefully:
+- `doMidi + 12 * Math.floor(step / 7) + MAJOR_SEMITONES[((step % 7) + 7) % 7]`
+- For step = -3: Math.floor(-3/7) = -1, ((-3 % 7) + 7) % 7 = ((-3) + 7) % 7 = 4 % 7 = 4, MAJOR_SEMITONES[4] = 7
+- So: 60 + 12*(-1) + 7 = 60 - 12 + 7 = 55 ✓
+- For step = 9: Math.floor(9/7) = 1, ((9 % 7) + 7) % 7 = (2 + 7) % 7 = 2, MAJOR_SEMITONES[2] = 4
+- So: 60 + 12*1 + 4 = 76 ✓
+- For step = -8: Math.floor(-8/7) = -2, ((-8 % 7) + 7) % 7 = ((-8) + 7) % 7 = (-1 + 7) % 7 = 6, MAJOR_SEMITONES[6] = 11
+- So: 60 + 12*(-2) + 11 = 60 - 24 + 11 = 47 ✓
+
+Wait, in JavaScript, `-8 % 7` is `-1` (not 6). So `((-8 % 7) + 7) % 7 = (-1 + 7) % 7 = 6 % 7 = 6`. Good.
+
+And `-3 % 7` in JS is `-3`. So `((-3 % 7) + 7) % 7 = (-3 + 7) % 7 = 4 % 7 = 4`. Good.
+
+Now for the `Letter` type - it's `"C" | "D" | "E" | "F" | "G" | "A" | "B"`. I need to make sure the table uses these exact types.
+
+For the `accidental` field, it's `-1 | 0 | 1`. I need to cast appropriately.
+
+Let me also check: the test says `keyForDo(0).tonic` should be "C" and `keyForDo(127).tonic` should be "G".
+- 0 % 12 = 0 → C ✓
+- 127 % 12 = 7 → G ✓
+
+Now let me write the code. I need to be careful about:
+- No module-level mutable state
+- No `enum`, `namespace`, constructor parameter properties, decorators
+- Import from `../types.ts` with `.ts` extension
+- Export exactly the four functions and two constants
+
+Let me also check the `fittingKeys` validation: "Throws RangeError if singerDo is not an integer from 5 to 115."
+
+And `keyForDo`: "Throws RangeError if doMidi is not an integer from 0 to 127."
+
+And `noteMidi`: "Throws RangeError if step or doMidi is not an integer."
+
+For integer checking, I'll use `Number.isInteger()`.
+
+Let me write the complete file now.
+<</thinking>>
+```ts
+import type { Key, Letter, Melody } from "../types.ts";
+import { MAJOR_SEMITONES } from "../types.ts";
+
+export const MAX_ACCIDENTALS = 4;
+export const KEY_SPREAD = 3;
+
+const SPELLING: Array<{ tonic: Letter; accidental: -1 | 0 | 1; sharps: number; flats: number }> = [
+  { tonic: "C", accidental: 0, sharps: 0, flats: 0 },
+  { tonic: "D", accidental: -1, sharps: 0, flats: 5 },
+  { tonic: "D", accidental: 0, sharps: 2, flats: 0 },
+  { tonic: "E", accidental: -1, sharps: 0, flats: 3 },
+  { tonic: "E", accidental: 0, sharps: 4, flats: 0 },
+  { tonic: "F", accidental: 0, sharps: 0, flats: 1 },
+  { tonic: "F", accidental: 1, sharps: 6, flats: 0 },
+  { tonic: "G", accidental: 0, sharps: 1, flats: 0 },
+  { tonic: "A", accidental: -1, sharps: 0, flats: 4 },
+  { tonic: "A", accidental: 0, sharps: 3, flats: 0 },
+  { tonic: "B", accidental: -1, sharps: 0, flats: 2 },
+  { tonic: "B", accidental: 0, sharps: 5, flats: 0 },
+];
+
+export function keyForDo(doMidi: number): Key {
+  if (!Number.isInteger(doMidi) || doMidi < 0 || doMidi > 127) {
+    throw new RangeError(`doMidi must be an integer from 0 to 127, got ${doMidi}`);
+  }
+  const pc = ((doMidi % 12) + 12) % 12;
+  const entry = SPELLING[pc];
+  return {
+    tonic: entry.tonic,
+    accidental: entry.accidental,
+    sharps: entry.sharps,
+    flats: entry.flats,
+    doMidi,
+  };
+}
+
+export function noteMidi(step: number, doMidi: number): number {
+  if (!Number.isInteger(step) || !Number.isInteger(doMidi)) {
+    throw new RangeError("step and doMidi must be integers");
+  }
+  const octave = Math.floor(step / 7);
+  const idx = ((step % 7) + 7) % 7;
+  return doMidi + 12 * octave + MAJOR_SEMITONES[idx];
+}
+
+export function fittingKeys(melody: Melody, singerDo: number): Key[] {
+  if (!Number.isInteger(singerDo) || singerDo < 5 || singerDo > 115) {
+    throw new RangeError(`singerDo must be an integer from 5 to 115, got ${singerDo}`);
+  }
+
+  const rangeLow = singerDo - 5;
+  const rangeHigh = singerDo + 12;
+
+  const keys: Key[] = [];
+
+  for (let doMidi = singerDo - KEY_SPREAD; doMidi <= singerDo + KEY_SPREAD; doMidi++) {
+    const key = keyForDo(doMidi);
+
+    if (key.sharps > MAX_ACCIDENTALS || key.flats > MAX_ACCIDENTALS) {
+      continue;
+    }
+
+    let fits = true;
+    for (const step of melody.degrees) {
+      const midi = noteMidi(step, doMidi);
+      if (midi < rangeLow || midi > rangeHigh) {
+        fits = false;
+        break;
+      }
+    }
+
+    if (fits) {
+      keys.push(key);
+    }
+  }
+
+  return keys;
+}
+
+export function pickKey(melody: Melody, singerDo: number, alwaysMyDo: boolean, rand: () => number): Key {
+  if (alwaysMyDo) {
+    return keyForDo(singerDo);
+  }
+
+  const keys = fittingKeys(melody, singerDo);
+
+  if (keys.length === 0) {
+    return keyForDo(singerDo);
+  }
+
+  const r = rand();
+  return keys[Math.floor(r * keys.length)];
+}
+```
