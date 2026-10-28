@@ -1,0 +1,17 @@
+✔ in-tune degrees of C major, octave 0 (0.420875ms)
+✔ octaves above and below do (0.084083ms)
+✔ sharp and flat readings (0.05275ms)
+✔ chromatic notes go to the nearer whole-tone neighbour (0.375792ms)
+✔ another key: do = G3 (0.0615ms)
+✔ hzToDegree rejects bad input (0.1705ms)
+✔ degreeToHz (0.055958ms)
+✔ degreeToHz and hzToDegree round-trip (0.16225ms)
+✔ degreeToHz rejects bad input (0.054792ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 70.152708

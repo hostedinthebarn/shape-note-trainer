@@ -1,0 +1,20 @@
+✔ constants (0.311083ms)
+✔ nsdf: shape and basic values (8.239334ms)
+✔ pure sines 70-1100 Hz at 44.1 and 48 kHz: within 5 cents, clarity > 0.95 (39.179625ms)
+✔ harmonic-rich tones (1/h, 20 harmonics): within 5 cents (37.153166ms)
+✔ weak fundamental (h1 at 10%, like a bass voice): no octave-up error (5.861625ms)
+✔ octave-plus-fifth trap: strong 3rd harmonic over weak 1st and 2nd at 98 Hz (2.891167ms)
+✔ vibrato (5.5 Hz, +/-60 cents): each window within 10 cents of its mean pitch (60.012167ms)
+✔ tone plus moderate noise (sigma 0.05) is still found (3.489125ms)
+✔ range edges: 65 Hz and 1200 Hz are found (11.284292ms)
+✔ below the range: 50 Hz returns null (5.640417ms)
+✔ silence, DC, very quiet signals and pure noise return null (17.631458ms)
+✔ bad sample rate throws RangeError (0.221208ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 262.247875

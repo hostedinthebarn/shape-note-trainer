@@ -1,0 +1,24 @@
+{
+  "component": "hz-to-degree",
+  "model": "qwen3-coder:30b",
+  "num_ctx": 16384,
+  "node": "v26.12.0",
+  "result": "pass",
+  "tries": 1,
+  "seconds": 12.2,
+  "tokens_in": 3551,
+  "tokens_out": 814,
+  "per_try": [
+    {
+      "try": 1,
+      "pass": true,
+      "tokens_in": 3551,
+      "tokens_out": 814,
+      "seconds": 12.2,
+      "load_seconds": 0.0,
+      "wall_seconds": 12.2,
+      "oddities": []
+    }
+  ],
+  "workdir": "/Users/gary/Code/shape-note-trainer/prototypes/singing/gen-degree/hz-to-degree/qwen3-coder_30b"
+}
