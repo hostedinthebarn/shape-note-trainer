@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# Read-only by default; the deploy job sets its own.
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # Nothing here pushes; don't leave the token in .git/config for later steps.
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          # Node runs the .ts sources and tests directly (type stripping); match the Mac.
+          node-version: 26
+      - run: npm test
+      # The deploy gate: build.mjs fails on a file type outside the allowlist or a secret pattern
+      # anywhere in what would ship.
+      - run: npm run build
+
+  # Deploy to Cloudflare when main changes and the tests pass, as cookoffchamps does (SW-73).
+  # `npm run deploy` is the same command as a manual deploy: tests, build (allowlist + secret
+  # scan), `wrangler deploy`, then scripts/verify.mjs from the public internet (real files 200,
+  # source/config paths 404/403, a made-up path 404, security headers present).
+  # Secrets (environment "production"): CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID.
+  deploy:
+    needs: [test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+    # One deploy at a time, in order; a newer push waits rather than racing.
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # Nothing here pushes; don't leave the token in .git/config for later steps.
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 26
+      - run: npm run deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
