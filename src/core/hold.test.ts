@@ -102,3 +102,9 @@ test("pure: holdReading never changes its input", () => {
   }
   assert.deepEqual(structuredClone(h), h, "plain data");
 });
+
+test("a reset gap clears the median window too, so old readings don't judge new ones (SW-58 review)", () => {
+  const { first } = feed([...steady(300, 0, 200), ...steady(null, 210, 330), ...steady(0, 340, 1000)]);
+  assert.deepEqual(first, { t: 640, acc: { cents: 0, start: 340 } },
+    "RULE: after a gap of more than 100 ms the median starts empty: the first reading after it (0 cents, t = 340) starts the hold, accepted 300 ms later");
+});

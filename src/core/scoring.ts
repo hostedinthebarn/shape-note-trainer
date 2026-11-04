@@ -213,6 +213,24 @@ export function view(state: ScoringState): LiveView {
     // But since we're iterating from 0, and we found the minimum distance,
     // we already have the correct index for this case.
     
+    const candidates = [...MAJOR_SEMITONES, 12];
+    nearestIndex = 0;
+    minDist = Math.abs(x - candidates[0]);
+    
+    for (let i = 1; i < candidates.length; i++) {
+      const dist = Math.abs(x - candidates[i]);
+      if (dist < minDist) {
+        minDist = dist;
+        nearestIndex = i;
+      }
+    }
+    
+    // If the nearest candidate is at index 7 (which represents 12 semitones = do again),
+    // it means we're looking at degree 0 (do), so we should map back to index 0.
+    if (nearestIndex === candidates.length - 1) {
+      nearestIndex = 0;
+    }
+    
     const nearestDegree = DEGREES[nearestIndex];
     const targetDegree = DEGREES[((step % 7) + 7) % 7];
     

@@ -46,6 +46,7 @@ export function holdReading(h: Hold, t: number, err: number | null, band: number
     newH.heldMs = 0;
     newH.errs = [];
     newH.prevInBand = false;
+    newH.window = [];
   }
 
   newH.window = newH.window.filter(([wt]) => wt > t - MEDIAN_MS);

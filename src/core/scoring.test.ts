@@ -300,3 +300,16 @@ test("replay: the same singing is not accepted as sol or mi", () => {
     assert.equal(v.singing === "do" || v.status === "listening", true, `the view says do is being sung (got ${v.singing})`);
   }
 });
+
+test("singing wraps at the octave: just under the do above is do, not ti (SW-58 review)", () => {
+  const look = (target: number, cents: number, strict: boolean) =>
+    view(run(init({ steps: [target], doHz: C3, strict }, 0), sing(cents, 0, 250)));
+  let v = look(0, -30, true);
+  assert.deepEqual([v.status, v.singing], ["flat", null],
+    "RULE: strict, target do, 30 cents flat: still nearest do (1170 is 30 from 1200, 70 from ti at 1100), so singing is null, not ti");
+  v = look(6, 1160, false);
+  assert.deepEqual([v.status, v.singing], ["sharp", "do"],
+    "RULE: target ti (1100), sung at 1160: nearest degree is do above (1200, 40 away), so singing do");
+  v = look(0, -100, false);
+  assert.deepEqual([v.status, v.singing], ["flat", "ti"], "a whole semitone flat of do is still ti");
+});
