@@ -1,0 +1,83 @@
+# CodeRabbit review config, matching cookoffchamps (SW-71). Quiet on purpose: findings only.
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: en-US
+early_access: false
+tone_instructions: "Terse and specific. Only flag real problems; no praise, no filler."
+
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  high_level_summary: false
+  poem: false
+  review_status: false
+  collapse_walkthrough: true
+  sequence_diagrams: false
+  estimate_code_review_effort: false
+  assess_linked_issues: false
+  related_issues: false
+  related_prs: false
+  suggested_labels: false
+  suggested_reviewers: false
+  auto_review:
+    enabled: true
+    drafts: true
+    base_branches:
+      - main
+  path_filters:
+    - "!static/font/**"
+    - "!static/icons/*.png"
+  path_instructions:
+    - path: "src/core/**/*.ts"
+      instructions: |
+        The core is written by a local model (qwen) from the packet in
+        packets/<component>/packet.md, against the tests beside each file;
+        that is the point of the project. Report real bugs, but phrase a fix
+        as a test vector or packet wording, not as a code patch: core fixes
+        go back through the packet, not hand edits. Don't flag style.
+    - path: "packets/**"
+      instructions: |
+        A packet is the whole spec a local model gets. Flag ambiguity, a rule
+        that contradicts the tests, or a test vector whose numbers don't
+        follow from the stated rule.
+    - path: "src/shell/**/*.ts"
+      instructions: |
+        The shell holds the mic and speaker only during an exercise:
+        engine.release() must run when leaving an exercise, on hidden, and on
+        pagehide. Flag anything that keeps the mic open longer, or an await in
+        setup/connectMic without a stale() check after it. The worklet and
+        detector worker load from blob URLs (offline on iPhone); flag a change
+        back to loading them by URL.
+    - path: "static/_headers"
+      instructions: |
+        This holds the CSP and the other response headers. Flag anything that
+        widens script-src, connect-src or default-src, adds 'unsafe-inline' or
+        'unsafe-eval' to scripts, or drops a header. Today's third-party
+        origins are Cloudflare Web Analytics only.
+    - path: "build.mjs"
+      instructions: |
+        The deploy gate: an allowlist of file types plus secret patterns, over
+        every file that ships (binary files read as latin1). Flag any change
+        that turns it into a denylist, loosens a pattern, or adds an extension
+        without a comment saying why.
+    - path: "src/shell/sw.template.js"
+      instructions: |
+        Cache-first over exactly the published files, versioned by content
+        hash. No skipWaiting or clients.claim: a running page must never mix
+        two deploys. Flag either being added.
+    - path: "scripts/verify.mjs"
+      instructions: "The post-deploy check from outside. Flag anything that weakens a check or removes a sensitive path."
+    - path: ".github/**"
+      instructions: "Flag any step that exposes secrets to pull-request code."
+    - path: "wrangler.jsonc"
+      instructions: "Static assets only. Flag a Worker script, bindings, or secrets/tokens in vars."
+  tools:
+    gitleaks:
+      enabled: true
+    github-checks:
+      enabled: false
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  opt_out: false
