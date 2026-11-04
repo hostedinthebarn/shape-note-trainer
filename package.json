@@ -7,6 +7,7 @@
     "test": "node --test",
     "build": "node --no-warnings build.mjs",
     "dev": "node --no-warnings build.mjs && node dev/serve.mjs",
-    "deploy": "npm test && npm run build && npx --yes wrangler@4.149.0 deploy"
+    "deploy": "npm test && npm run build && npx --yes wrangler@4.149.0 deploy && node scripts/verify.mjs",
+    "verify": "node scripts/verify.mjs"
   }
 }

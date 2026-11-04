@@ -442,8 +442,9 @@ addEventListener("resize", () => { if (S.screen === "exercise" || S.screen === "
 S.screen = S.settings ? "mic" : "welcome";
 // Bravura must be loaded before the first staff is drawn (SW-51 handles the offline font).
 document.fonts.load("40px Bravura").finally(render);
-// SW-51: work offline once it has been opened. Skipped on the dev server (localhost) so edits show at once.
-if ("serviceWorker" in navigator && location.hostname !== "localhost" && location.hostname !== "127.0.0.1") {
+// SW-51: work offline once it has been opened. Production only: the dev server (localhost or a
+// cloudflared quick tunnel to the phone) must always show the latest edit.
+if ("serviceWorker" in navigator && location.hostname === "sing.hostedinthebarn.com") {
   navigator.serviceWorker.register("sw.js").catch(() => { /* offline support is a bonus, never a blocker */ });
 }
 
