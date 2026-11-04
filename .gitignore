@@ -3,3 +3,4 @@ node_modules/
 .DS_Store
 # prototypes live on their own prototype/* branches; their local reports are personal data
 prototypes/
+.wrangler/

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#1f6feb"/>
+  <g fill="#fff">
+    <!-- do (triangle), re (half-moon), mi (diamond): the first three Aikin shapes -->
+    <polygon points="70,330 170,330 120,230"/>
+    <path d="M206,250 h100 a50,50 0 0 1 -100,0 z"/>
+    <polygon points="392,170 442,230 392,290 342,230"/>
+  </g>
+  <g stroke="#fff" stroke-width="10" opacity=".55">
+    <line x1="48" y1="350" x2="464" y2="350"/>
+    <line x1="48" y1="310" x2="464" y2="310"/>
+    <line x1="48" y1="270" x2="464" y2="270"/>
+    <line x1="48" y1="230" x2="464" y2="230"/>
+    <line x1="48" y1="190" x2="464" y2="190"/>
+  </g>
+</svg>

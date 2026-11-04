@@ -96,13 +96,15 @@ function render() {
 
 function welcome(app: HTMLElement) {
   app.innerHTML = `
-    <h1>Shape-note trainer</h1>
+    <h1>Sing the Shapes</h1>
     <p class="dim">Learn to sing the seven shapes by sight. The app gives you do, you sing the notes, and it listens.</p>
     <div class="card" style="text-align:center;margin:18px 0">
       ${[0, 1, 2, 3, 4, 5, 6].map((d) => shapeSvg(d, 40, "black", "margin:0 2px")).join("")}
       <div class="dim small">do re mi fa sol la ti</div>
     </div>
-    <button class="primary big" id="go">Get started</button>`;
+    <button class="primary big" id="go">Get started</button>
+    <p class="dim small" style="margin-top:14px">Free, with no account. Everything stays on your phone: what you sing is heard by the app on your phone and never sent anywhere.</p>
+    <p class="dim small">Made by <a href="https://hostedinthebarn.com/">Hosted in the Barn</a>. <a href="https://github.com/hostedinthebarn/shape-note-trainer">Source code</a> (MIT).</p>`;
   $("#go")!.onclick = () => go("voice");
 }
 
@@ -440,6 +442,10 @@ addEventListener("resize", () => { if (S.screen === "exercise" || S.screen === "
 S.screen = S.settings ? "mic" : "welcome";
 // Bravura must be loaded before the first staff is drawn (SW-51 handles the offline font).
 document.fonts.load("40px Bravura").finally(render);
+// SW-51: work offline once it has been opened. Skipped on the dev server (localhost) so edits show at once.
+if ("serviceWorker" in navigator && location.hostname !== "localhost" && location.hostname !== "127.0.0.1") {
+  navigator.serviceWorker.register("sw.js").catch(() => { /* offline support is a bonus, never a blocker */ });
+}
 
 // For the dev check in Chrome (no effect on the app).
 (globalThis as unknown as { __snt: unknown }).__snt = { S, go, engine, DEGREES };

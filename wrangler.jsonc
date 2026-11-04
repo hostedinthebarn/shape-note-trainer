@@ -1,0 +1,10 @@
+// SW-53: a static-assets-only Worker. Only public/ (built by build.mjs behind its allowlist and
+// secret scan) is uploaded; there is no Worker script. Served at sing.hostedinthebarn.com (SW-52).
+{
+  "name": "sing-the-shapes",
+  "compatibility_date": "2026-10-01",
+  "assets": { "directory": "./public" },
+  "routes": [{ "pattern": "sing.hostedinthebarn.com", "custom_domain": true }],
+  "workers_dev": false,
+  "preview_urls": false
+}
