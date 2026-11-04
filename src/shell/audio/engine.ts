@@ -9,6 +9,9 @@
 //   from the mic screen, never mid-exercise.
 // - An open mic hears the tone: tones emit toneStart/toneEnd so scoring gates those readings.
 // - A second tap while getUserMedia is pending must not open a second mic: callers share one promise.
+// - Gary, 2026-11-04: don't hold the mic and the phone's audio for the whole visit. The app calls
+//   release() whenever it leaves an exercise or goes to the background; the next exercise starts
+//   everything again from a tap. release() also hands the audio session back to the system.
 import type { ScoringEvent } from "../../types.ts";
 import { createMerger } from "./merge.ts";
 import type { Merger } from "./merge.ts";
@@ -41,13 +44,12 @@ export class AudioEngine {
   private wave: PeriodicWave | null = null;
   private starting: Promise<void> | null = null;
   private opening: Promise<void> | null = null;
-  private merger: Merger;
+  private merger!: Merger;
   private timer: ReturnType<typeof setInterval> | null = null;
   private opts: EngineOptions;
 
   constructor(opts: EngineOptions) {
     this.opts = opts;
-    this.merger = createMerger(opts.onEvent);
   }
 
   /** The audio clock in ms (the clock every event uses). */
@@ -66,6 +68,8 @@ export class AudioEngine {
     if (nav.audioSession) nav.audioSession.type = "play-and-record";
     const ctx = new AudioContext({ latencyHint: "interactive" });
     this.ctx = ctx;
+    // A fresh context restarts the audio clock at 0, so events are merged afresh too.
+    this.merger = createMerger(this.opts.onEvent);
     await ctx.audioWorklet.addModule(new URL("tap-worklet.js", this.opts.base));
     const tap = new AudioWorkletNode(ctx, "tap", { numberOfInputs: 1, numberOfOutputs: 1, channelCount: 1, channelCountMode: "explicit" });
     // The tap must reach the destination to be pulled, but silently.
@@ -88,13 +92,13 @@ export class AudioEngine {
 
     // Tone events must still be released when no readings arrive (mic closed).
     this.timer = setInterval(() => this.merger.flush(this.now()), 50);
-    document.addEventListener("visibilitychange", this.onVisible);
     await ctx.resume();
   }
 
-  private onVisible = () => {
-    if (document.visibilityState === "visible" && this.ctx && this.ctx.state !== "running") void this.ctx.resume();
-  };
+  /** True while the mic is open. */
+  get listening(): boolean {
+    return !!this.stream;
+  }
 
   /** Ask for the mic and connect it. Call once, up front; a second call joins the first. */
   openMic(): Promise<void> {
@@ -152,7 +156,7 @@ export class AudioEngine {
 
   /** A hint or skip from the UI, stamped on the audio clock and merged in order. */
   ui(type: "hint" | "skip"): void {
-    this.merger.other({ type, t: this.now() });
+    this.merger?.other({ type, t: this.now() });
   }
 
   /** Close the mic (end of session). The context stays for tones. */
@@ -163,14 +167,29 @@ export class AudioEngine {
     this.source = null;
   }
 
-  /** Tear everything down. */
-  async dispose(): Promise<void> {
+  /** Let go of everything: the mic, the audio context (so the speaker and the audio session are
+   *  free for other apps) and the detector worker. Safe to call at any time and more than once;
+   *  start() or openMic() builds it all again. */
+  async release(): Promise<void> {
+    const ctx = this.ctx;
     this.closeMic();
     if (this.timer) clearInterval(this.timer);
-    document.removeEventListener("visibilitychange", this.onVisible);
+    this.timer = null;
+    this.tap?.disconnect();
+    this.tap = null;
     this.worker?.terminate();
-    await this.ctx?.close();
+    this.worker = null;
+    this.wave = null;
     this.ctx = null;
     this.starting = null;
+    this.opening = null;
+    const nav = navigator as Navigator & AudioSessionNav;
+    if (nav.audioSession) nav.audioSession.type = "auto";
+    if (ctx && ctx.state !== "closed") await ctx.close().catch(() => {});
+  }
+
+  /** Tear everything down (same as release). */
+  dispose(): Promise<void> {
+    return this.release();
   }
 }

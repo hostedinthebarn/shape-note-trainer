@@ -83,6 +83,8 @@ const engine = new AudioEngine({
 // ── navigation ───────────────────────────────────────────────────────────────
 
 function go(screen: Screen) {
+  // Gary, 2026-11-04: hold the mic and the phone's audio only during an exercise.
+  if (screen !== "exercise") void engine.release();
   S.screen = screen;
   render();
   window.scrollTo(0, 0);
@@ -214,7 +216,7 @@ function settings(app: HTMLElement) {
     S.settings = { ...S.settings!, doMidi: +b.dataset.m! };
     save();
     render();
-    void engine.play(midiHz(S.settings.doMidi));
+    void engine.play(midiHz(S.settings.doMidi)).then(() => { if (S.screen !== "exercise") void engine.release(); });
   });
   $<HTMLInputElement>("#mydo")!.onchange = (e) => { S.settings = { ...S.settings!, alwaysMyDo: (e.target as HTMLInputElement).checked }; save(); };
   $<HTMLInputElement>("#strict")!.onchange = (e) => { S.settings = { ...S.settings!, strict: (e.target as HTMLInputElement).checked }; save(); };
@@ -233,7 +235,16 @@ function newExercise(level: number): Exercise {
 const noteHz = (ex: Exercise, stepFromDo: number) => midiHz(noteMidi(stepFromDo, ex.key.doMidi));
 
 async function startExercise(level: number) {
-  if (!S.micReady) { go("mic"); return; }
+  // Called from a tap, so the mic and the audio context can start here. The mic opens before the
+  // first tone (the SW-37 burst lesson) and is released when the exercise screen is left.
+  try {
+    await engine.openMic();
+    S.micReady = true;
+  } catch {
+    S.micReady = false;
+    go("mic");
+    return;
+  }
   const exercise = newExercise(level);
   const s = S.settings!;
   const keyChanged = S.lastKeyDo !== exercise.key.doMidi;  // the first exercise of a visit counts as a change
@@ -439,7 +450,22 @@ function summary(app: HTMLElement) {
 // ── start ────────────────────────────────────────────────────────────────────
 
 addEventListener("resize", () => { if (S.screen === "exercise" || S.screen === "summary") render(); });
-S.screen = S.settings ? "mic" : "welcome";
+S.screen = S.settings ? "home" : "welcome";
+
+// Gary, 2026-11-04: let go of the mic and speaker as soon as the app isn't on screen (another app,
+// the Home Screen, a locked phone). An exercise in progress is abandoned, not saved, and the app
+// comes back on the levels screen; the next exercise asks for the mic again from its tap.
+function background() {
+  if (document.visibilityState === "visible") return;
+  if (S.run) S.run = null;
+  if (S.screen === "exercise") S.screen = "home";
+  void engine.release();
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") render();
+  else background();
+});
+addEventListener("pagehide", () => void engine.release());
 // Bravura must be loaded before the first staff is drawn (SW-51 handles the offline font).
 document.fonts.load("40px Bravura").finally(render);
 // SW-51: work offline once it has been opened. Production only: the dev server (localhost or a
