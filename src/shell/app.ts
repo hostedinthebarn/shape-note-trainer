@@ -36,7 +36,11 @@ function doPlace(key: Key, clef: Clef): string {
   const ORD = ["bottom", "second", "middle", "fourth", "top"];
   const SPACE = ["first", "second", "third", "fourth"];
   if (p >= 0 && p <= 8) return p % 2 === 0 ? `on the ${ORD[p / 2]} line` : `in the ${SPACE[(p - 1) / 2]} space`;
-  return p < 0 ? (p === -1 ? "just below the staff" : "below the staff, on a ledger line") : (p === 9 ? "just above the staff" : "above the staff, on a ledger line");
+  // Outside the staff, even positions are ledger lines and odd ones the spaces between them (SW-58).
+  if (p === -1) return "just below the staff";
+  if (p === 9) return "just above the staff";
+  const where = p < 0 ? "below the staff" : "above the staff";
+  return p % 2 === 0 ? `${where}, on a ledger line` : `${where}, in a space between ledger lines`;
 }
 
 // ── state ────────────────────────────────────────────────────────────────────
@@ -216,10 +220,19 @@ function settings(app: HTMLElement) {
     S.settings = { ...S.settings!, doMidi: +b.dataset.m! };
     save();
     render();
-    void engine.play(midiHz(S.settings.doMidi)).then(() => { if (S.screen !== "exercise") void engine.release(); });
+    previewDo(midiHz(S.settings.doMidi));
   });
   $<HTMLInputElement>("#mydo")!.onchange = (e) => { S.settings = { ...S.settings!, alwaysMyDo: (e.target as HTMLInputElement).checked }; save(); };
   $<HTMLInputElement>("#strict")!.onchange = (e) => { S.settings = { ...S.settings!, strict: (e.target as HTMLInputElement).checked }; save(); };
+}
+
+/** Settings' do preview: release the audio afterwards unless something newer is using it. */
+let previews = 0;
+function previewDo(hz: number) {
+  const mine = ++previews;
+  void engine.play(hz).then(() => {
+    if (mine === previews && S.screen === "settings" && !engine.listening) void engine.release();
+  });
 }
 
 // ── exercise ─────────────────────────────────────────────────────────────────
@@ -344,10 +357,10 @@ function renderExercise(app = $("#app")!) {
 
   $("#quit")!.onclick = () => { S.run = null; go("home"); };
   $("#flip")!.onclick = () => { run.showStaff = !run.showStaff; renderExercise(); };
-  $("#replay")!.onclick = () => { if (run.phase === "sing") void engine.play(noteHz(ex, 0)); };
+  $("#replay")!.onclick = () => { if (run.phase === "sing" && !engine.busy) void engine.play(noteHz(ex, 0)); };
   $("#hint")!.onclick = () => {
     const now = view(run.scoring);
-    if (run.phase !== "sing" || !now.hintOffered || now.done) return;
+    if (run.phase !== "sing" || !now.hintOffered || now.done || engine.busy) return;
     engine.ui("hint");
     void engine.play(noteHz(ex, ex.melody.degrees[now.noteIndex]));
   };

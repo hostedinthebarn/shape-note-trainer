@@ -47,6 +47,10 @@ export class AudioEngine {
   private merger!: Merger;
   private timer: ReturnType<typeof setInterval> | null = null;
   private opts: EngineOptions;
+  /** Bumped by release(); a setup or mic request that started before it gives up after its awaits. */
+  private gen = 0;
+  /** The tone (or arpeggio) now sounding, so a second one waits instead of overlapping (SW-58). */
+  private playing: Promise<void> | null = null;
 
   constructor(opts: EngineOptions) {
     this.opts = opts;
@@ -63,7 +67,12 @@ export class AudioEngine {
     return this.starting;
   }
 
+  private stale(gen: number): boolean {
+    return gen !== this.gen;
+  }
+
   private async setup(): Promise<void> {
+    const gen = this.gen;
     const nav = navigator as Navigator & AudioSessionNav;
     if (nav.audioSession) nav.audioSession.type = "play-and-record";
     const ctx = new AudioContext({ latencyHint: "interactive" });
@@ -71,6 +80,7 @@ export class AudioEngine {
     // A fresh context restarts the audio clock at 0, so events are merged afresh too.
     this.merger = createMerger(this.opts.onEvent);
     await ctx.audioWorklet.addModule(new URL("tap-worklet.js", this.opts.base));
+    if (this.stale(gen)) throw new DOMException("released during setup", "AbortError");
     const tap = new AudioWorkletNode(ctx, "tap", { numberOfInputs: 1, numberOfOutputs: 1, channelCount: 1, channelCountMode: "explicit" });
     // The tap must reach the destination to be pulled, but silently.
     const sink = ctx.createGain();
@@ -93,6 +103,7 @@ export class AudioEngine {
     // Tone events must still be released when no readings arrive (mic closed).
     this.timer = setInterval(() => this.merger.flush(this.now()), 50);
     await ctx.resume();
+    if (this.stale(gen)) throw new DOMException("released during setup", "AbortError");
   }
 
   /** True while the mic is open. */
@@ -108,10 +119,16 @@ export class AudioEngine {
   }
 
   private async connectMic(): Promise<void> {
+    const gen = this.gen;
     await this.start();
     const stream = await navigator.mediaDevices.getUserMedia({
       audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
     });
+    if (this.stale(gen) || !this.ctx) {
+      // Released while the permission prompt was up: don't keep a mic nobody will use.
+      stream.getTracks().forEach((t) => t.stop());
+      throw new DOMException("released while opening the mic", "AbortError");
+    }
     this.stream = stream;
     this.source = this.ctx!.createMediaStreamSource(stream);
     this.tap!.port.postMessage({ reset: true });
@@ -126,7 +143,20 @@ export class AudioEngine {
 
   /** Play one or more tones back to back (an arpeggio is several). Emits toneStart at the first
    *  tone's start and toneEnd at the last one's end, on the audio clock. Resolves after toneEnd. */
-  async play(freqs: number | number[], each = TONE_S): Promise<void> {
+  play(freqs: number | number[], each = TONE_S): Promise<void> {
+    // One tone at a time: overlapping tones confuse the scoring's tone gate (SW-58 review), so a
+    // tap while a tone is sounding is ignored rather than queued.
+    if (this.playing) return this.playing;
+    this.playing = this.sound(freqs, each).finally(() => { this.playing = null; });
+    return this.playing;
+  }
+
+  /** True while a tone is sounding. */
+  get busy(): boolean {
+    return !!this.playing;
+  }
+
+  private async sound(freqs: number | number[], each: number): Promise<void> {
     await this.start();
     const ctx = this.ctx!;
     const list = Array.isArray(freqs) ? freqs : [freqs];
@@ -148,10 +178,13 @@ export class AudioEngine {
       o.stop(t + each + 0.02);
       t += each;
     }
+    // The mic hears the tone late by the output latency (large on Bluetooth or car audio), so the
+    // gate's end is pushed back by it; scoring adds its own fixed tail on top (SW-58 review).
+    const late = (ctx.outputLatency || 0) + (ctx.baseLatency || 0);
     this.merger.tone({ type: "toneStart", t: t0 * 1000 });
-    this.merger.tone({ type: "toneEnd", t: t * 1000 });
+    this.merger.tone({ type: "toneEnd", t: (t + late) * 1000 });
     await new Promise((res) => setTimeout(res, (t - ctx.currentTime) * 1000 + 20));
-    out.disconnect();
+    if (ctx.state !== "closed") out.disconnect();
   }
 
   /** A hint or skip from the UI, stamped on the audio clock and merged in order. */
@@ -171,6 +204,8 @@ export class AudioEngine {
    *  free for other apps) and the detector worker. Safe to call at any time and more than once;
    *  start() or openMic() builds it all again. */
   async release(): Promise<void> {
+    this.gen++;
+    this.playing = null;   // a tone cut off by release mustn't block the next one
     const ctx = this.ctx;
     this.closeMic();
     if (this.timer) clearInterval(this.timer);

@@ -24,14 +24,31 @@ function write(key: string, value: unknown): void {
 export function defaultSettings(voicePart: VoicePartId): Settings {
   return { voicePart, doMidi: VOICE_PARTS[voicePart].defaultDoMidi, alwaysMyDo: false, strict: false };
 }
-/** Null on first run (no voice part chosen yet). */
+/** Null on first run (no voice part chosen yet). Anything malformed (an older build, a damaged
+ *  store) is repaired field by field rather than allowed to break the first render (SW-58). */
 export function loadSettings(): Settings | null {
-  const s = read<Settings>(KEY_SETTINGS);
-  return s && s.voicePart in VOICE_PARTS ? s : null;
+  const s = read<Partial<Settings>>(KEY_SETTINGS);
+  if (!s || typeof s !== "object" || typeof s.voicePart !== "string" || !(s.voicePart in VOICE_PARTS)) return null;
+  const base = defaultSettings(s.voicePart as VoicePartId);
+  const okMidi = Number.isInteger(s.doMidi) && (s.doMidi as number) >= 24 && (s.doMidi as number) <= 96;
+  return {
+    voicePart: base.voicePart,
+    doMidi: okMidi ? (s.doMidi as number) : base.doMidi,
+    alwaysMyDo: typeof s.alwaysMyDo === "boolean" ? s.alwaysMyDo : base.alwaysMyDo,
+    strict: typeof s.strict === "boolean" ? s.strict : base.strict,
+  };
 }
 export function saveSettings(s: Settings): void { write(KEY_SETTINGS, s); }
 
-export function loadAttempts(): Attempt[] { return read<Attempt[]>(KEY_ATTEMPTS) ?? []; }
+/** Attempts that don't have the shape progress() and summary() rely on are dropped (SW-58). */
+export function loadAttempts(): Attempt[] {
+  const all = read<unknown>(KEY_ATTEMPTS);
+  if (!Array.isArray(all)) return [];
+  return all.filter((a): a is Attempt => !!a && typeof a === "object"
+    && Array.isArray((a as Attempt).results)
+    && Number.isInteger((a as Attempt).exercise?.level)
+    && typeof (a as Attempt).finishedAt === "string");
+}
 export function saveAttempt(a: Attempt): Attempt[] {
   const all = [...loadAttempts(), a].slice(-MAX_ATTEMPTS);
   write(KEY_ATTEMPTS, all);
