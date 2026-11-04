@@ -6,7 +6,7 @@ Sight-read 7-shape (Aikin) notation by singing into your phone. The app gives yo
 
 **How it was built:** Claude planned the pieces and wrote the tests; a local model (qwen3-coder, on a MacBook) wrote every file in `src/core/` against those tests. The story is on the [Hosted in the Barn blog](https://hostedinthebarn.com/).
 
-**Privacy:** everything happens on the phone. The microphone audio is analysed in the browser and never sent anywhere; settings and practice history stay in the browser's local storage. The site sets no cookies and loads no analytics.
+**Privacy:** everything happens on the phone. The microphone audio is analysed in the browser and never sent anywhere; settings and practice history stay in the browser's local storage. The site sets no cookies. It counts page visits with Cloudflare Web Analytics, which is cookie-free and doesn't fingerprint visitors; no audio, settings or practice history goes with it.
 
 - **Vocabulary:** [CONTEXT.md](CONTEXT.md)
 - **Layout:**

@@ -109,7 +109,7 @@ function welcome(app: HTMLElement) {
       <div class="dim small">do re mi fa sol la ti</div>
     </div>
     <button class="primary big" id="go">Get started</button>
-    <p class="dim small" style="margin-top:14px">Free, with no account. Everything stays on your phone: what you sing is heard by the app on your phone and never sent anywhere.</p>
+    <p class="dim small" style="margin-top:14px">Free, with no account. What you sing is heard by the app on your phone and never sent anywhere. We count visits with Cloudflare's cookie-free analytics; your practice history stays on your phone.</p>
     <p class="dim small">Made by <a href="https://hostedinthebarn.com/">Hosted in the Barn</a>. <a href="https://github.com/hostedinthebarn/shape-note-trainer">Source code</a> (MIT).</p>`;
   $("#go")!.onclick = () => go("voice");
 }
