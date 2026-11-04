@@ -24,6 +24,19 @@ const ATTACK_S = 0.03;
 const RELEASE_S = 0.12;
 const VOLUME = 0.35;
 
+/**
+ * Fetch a script from the page and hand back a blob URL for it. The page's own fetch is served by
+ * the service worker, so this works offline. On iPhone in airplane mode, loading the worklet and the
+ * module worker by URL failed at "enable the microphone" with "Importing a module failed"
+ * (Gary, 2026-11-04): those loads didn't come from the cache. The worker ships as one file with no
+ * imports (build.mjs), since relative imports can't resolve from a blob URL.
+ */
+async function scriptBlob(url: URL): Promise<string> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`could not load ${url.pathname} (${res.status})`);
+  return URL.createObjectURL(new Blob([await res.text()], { type: "text/javascript" }));
+}
+
 export interface EngineOptions {
   /** Base URL of the built shell/audio folder, e.g. new URL("./audio/", import.meta.url). */
   base: URL;
@@ -40,6 +53,7 @@ export class AudioEngine {
   stream: MediaStream | null = null;
   private tap: AudioWorkletNode | null = null;
   private worker: Worker | null = null;
+  private workerUrl: string | null = null;
   private source: MediaStreamAudioSourceNode | null = null;
   private wave: PeriodicWave | null = null;
   private starting: Promise<void> | null = null;
@@ -79,7 +93,12 @@ export class AudioEngine {
     this.ctx = ctx;
     // A fresh context restarts the audio clock at 0, so events are merged afresh too.
     this.merger = createMerger(this.opts.onEvent);
-    await ctx.audioWorklet.addModule(new URL("tap-worklet.js", this.opts.base));
+    const tapUrl = await scriptBlob(new URL("tap-worklet.js", this.opts.base));
+    try {
+      await ctx.audioWorklet.addModule(tapUrl);
+    } finally {
+      URL.revokeObjectURL(tapUrl);
+    }
     if (this.stale(gen)) throw new DOMException("released during setup", "AbortError");
     const tap = new AudioWorkletNode(ctx, "tap", { numberOfInputs: 1, numberOfOutputs: 1, channelCount: 1, channelCountMode: "explicit" });
     // The tap must reach the destination to be pulled, but silently.
@@ -88,7 +107,13 @@ export class AudioEngine {
     tap.connect(sink).connect(ctx.destination);
     this.tap = tap;
 
-    const worker = new Worker(new URL("detector-worker.js", this.opts.base), { type: "module" });
+    const workerUrl = await scriptBlob(new URL("detector-worker.js", this.opts.base));
+    if (this.stale(gen)) {
+      URL.revokeObjectURL(workerUrl);
+      throw new DOMException("released during setup", "AbortError");
+    }
+    const worker = new Worker(workerUrl, { type: "module" });
+    this.workerUrl = workerUrl;
     worker.onmessage = ({ data }) => this.merger.reading({ type: "reading", t: data.t, hz: data.hz });
     const ch = new MessageChannel();
     tap.port.postMessage({ port: ch.port1 }, [ch.port1]);
@@ -214,6 +239,8 @@ export class AudioEngine {
     this.tap = null;
     this.worker?.terminate();
     this.worker = null;
+    if (this.workerUrl) URL.revokeObjectURL(this.workerUrl);
+    this.workerUrl = null;
     this.wave = null;
     this.ctx = null;
     this.starting = null;

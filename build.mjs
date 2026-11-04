@@ -35,6 +35,15 @@ for await (const src of walk("src")) {
   await writeFile(out, js);
   n++;
 }
+// The engine starts the detector worker from a blob URL (offline on iPhone, see engine.ts), where
+// relative imports can't resolve, so the worker ships as one file with the detector inlined.
+{
+  const W = "public/js/shell/audio/detector-worker.js";
+  const mpm = (await readFile("public/js/core/mpm.js", "utf8")).replace(/^export\s+/gm, "");
+  const body = (await readFile(W, "utf8")).replace(/^import [^\n]*core\/mpm\.js["'];?\n/m, "");
+  if (/^\s*(import|export)\b/m.test(mpm + body)) throw new Error("build: detector worker still has an import or export after inlining");
+  await writeFile(W, `// Built: src/core/mpm.ts inlined ahead of the worker.\n${mpm}\n${body}`);
+}
 for (const f of STATIC) {
   await mkdir(dirname(join("public", f)), { recursive: true });
   await copyFile(join("static", f), join("public", f));
