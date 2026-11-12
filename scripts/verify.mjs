@@ -3,10 +3,10 @@
 // made-up path must 404 (so this isn't a single-page app answering 200 for everything). Exits 1 on
 // any failure. `node scripts/verify.mjs [base-url]`.
 const BASE = (process.argv[2] ?? "https://sing.hostedinthebarn.com").replace(/\/$/, "");
-const REAL = ["/", "/sw.js", "/manifest.webmanifest", "/robots.txt", "/js/shell/app.js",
+const REAL = ["/", "/practice/", "/landing.css", "/landing.js", "/sw.js", "/manifest.webmanifest", "/robots.txt", "/js/shell/app.js",
   "/js/shell/audio/tap-worklet.js", "/js/shell/audio/detector-worker.js", "/font/Bravura.woff2", "/icons/icon-192.png"];
 const SENSITIVE = ["/no-such-page-" + Date.now(), "/wrangler.jsonc", "/package.json", "/build.mjs", "/README.md",
-  "/src/shell/app.ts", "/src/shell/sw.template.js", "/static/index.html", "/scripts/verify.mjs", "/dev/serve.mjs",
+  "/src/shell/app.ts", "/src/shell/sw.template.js", "/static/index.html", "/static/practice/index.html", "/scripts/verify.mjs", "/dev/serve.mjs",
   "/packets/", "/prototypes/", "/.git/config", "/.gitignore", "/_headers", "/.env"];
 
 const status = async (p) => (await fetch(BASE + p, { redirect: "manual", cache: "no-store" })).status;

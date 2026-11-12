@@ -17,7 +17,7 @@ createServer(async (req, res) => {
   const path = normalize(decodeURIComponent(new URL(req.url, "http://x").pathname));
   const type = TYPES[extname(path) || ".html"];
   const base = path.startsWith("/dev/") ? root : join(root, "public");
-  const file = join(base, path === "/" ? "index.html" : path);
+  const file = join(base, path.endsWith("/") ? path + "index.html" : path);
   if (req.method !== "GET" || !type || path.includes("..") || !(file.startsWith(join(root, "public")) || file.startsWith(join(root, "dev")))) {
     res.writeHead(404).end("not found");
     return;
