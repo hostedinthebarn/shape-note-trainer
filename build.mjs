@@ -7,7 +7,7 @@ import { stripTypeScriptTypes } from "node:module";
 import { join, dirname, relative, extname, sep } from "node:path";
 
 /** Files copied from static/ into public/, by name. Add to this list deliberately. */
-const STATIC = ["index.html", "font/Bravura.woff2", "font/OFL.txt", "manifest.webmanifest", "robots.txt", "_headers",
+const STATIC = ["index.html", "practice/index.html", "landing.css", "landing.js", "font/Bravura.woff2", "font/OFL.txt", "manifest.webmanifest", "robots.txt", "_headers",
   "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
 /** Cloudflare control files: allowed only at the public/ root, never precached by the service worker. */
 const CONTROL = new Set(["_headers"]);
@@ -72,7 +72,8 @@ for (const f of CONTROL) if (files.includes(f)) scan(f, await readFile(join("pub
 // changes whenever any shipped byte (or the worker's own logic) does.
 const template = await readFile("src/shell/sw.template.js", "utf8");
 const version = hash.update("sw.template.js\0").update(template).digest("hex").slice(0, 12);
-const precache = ["./", ...files.filter((f) => !CONTROL.has(f) && f !== "index.html")];
+// The two pages are cached under their folder URLs; every other file by name.
+const precache = ["./", "./practice/", ...files.filter((f) => !CONTROL.has(f) && !f.endsWith("index.html"))];
 const sw = template.replace("__VERSION__", version).replace("__FILES__", JSON.stringify(precache));
 scan("sw.js", Buffer.from(sw));
 await writeFile("public/sw.js", sw);

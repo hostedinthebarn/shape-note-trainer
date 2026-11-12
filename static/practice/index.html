@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Sing the Shapes: a 7-shape note sight-singing trainer</title>
+<meta name="description" content="Learn to sight-read 7-shape (Aikin) notes by singing into your phone. The app gives you do, you sing, and it listens. Free, no account, works offline.">
+<link rel="canonical" href="https://sing.hostedinthebarn.com/practice/">
+<meta property="og:title" content="Sing the Shapes">
+<meta property="og:description" content="Learn to sight-read 7-shape notes by singing into your phone. Free, no account, works offline.">
+<meta property="og:url" content="https://sing.hostedinthebarn.com/practice/">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://sing.hostedinthebarn.com/icons/icon-512.png">
+<meta name="theme-color" content="#1f6feb">
+<meta name="apple-mobile-web-app-title" content="Sing Shapes">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<style>
+  @font-face { font-family: Bravura; src: url(../font/Bravura.woff2) format("woff2"); font-display: block; }
+  :root { --bg:#fbfaf7; --fg:#1d1d1f; --dim:#77756f; --line:#2b2b2b; --card:#fff; --border:#e4e1da;
+    --cur:#1f6feb; --ok:#1a7f37; --help:#bf8700; --skip:#a0a0a0; --warn:#cf222e; --accent:#1f6feb; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#141414; --fg:#eee; --dim:#999; --line:#ddd; --card:#1e1e1e; --border:#333;
+    --cur:#58a6ff; --ok:#3fb950; --help:#d29922; --skip:#666; --warn:#f85149; --accent:#58a6ff; } }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.4 -apple-system, system-ui, sans-serif; }
+  body { padding: env(safe-area-inset-top) 0 90px; }
+  #app { max-width: 520px; margin: 0 auto; padding: 12px 16px; }
+  h1 { font-size: 26px; margin: 18px 0 6px; } h2 { font-size: 20px; margin: 4px 0 10px; }
+  p { margin: 6px 0; } .dim { color: var(--dim); } .small { font-size: 13px; }
+  button { font: inherit; border: 1px solid var(--border); background: var(--card); color: var(--fg); border-radius: 12px; padding: 12px 14px; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button:disabled { opacity: .35; }
+  .big { width: 100%; padding: 16px; font-size: 18px; margin: 6px 0; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .spread { justify-content: space-between; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; min-height: 40px; }
+  .x { border: none; background: none; font-size: 22px; padding: 6px 8px; color: var(--dim); }
+  .g { font-family: Bravura; fill: var(--line); }
+  svg.staff line { stroke: var(--line); }
+  .note.done .g { fill: var(--ok); } .note.done line { stroke: var(--ok); }
+  .note.helped .g { fill: var(--help); } .note.helped line { stroke: var(--help); }
+  .note.skipped .g { fill: var(--skip); } .note.skipped line { stroke: var(--skip); }
+  .note.cur .g { fill: var(--cur); } .note.cur line { stroke: var(--cur); }
+  .note.dimmed .g { fill: var(--dim); } .note.dimmed line { stroke: var(--dim); }
+  .shape { font-family: Bravura; line-height: 1; }
+  .level { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 14px; background: var(--card); margin: 8px 0; width: 100%; text-align: left; }
+  .level .n { font-size: 22px; font-weight: 700; width: 28px; text-align: center; }
+  .level.suggest { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
+  .dots { letter-spacing: 2px; color: var(--ok); font-size: 12px; }
+  .say { font-size: 20px; min-height: 30px; text-align: center; margin: 6px 0; }
+  .say b { font-size: 24px; }
+  .actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .actions button { padding: 14px 6px; font-size: 15px; }
+  .hint { background: var(--help) !important; border-color: var(--help) !important; color: #fff !important; animation: pulse 1.2s infinite; }
+  @keyframes pulse { 50% { opacity: .65; } }
+  .ladder { position: relative; margin: 8px auto; }
+  .rung { position: absolute; left: 0; right: 0; display: flex; align-items: center; gap: 10px; padding-left: 12px; border-top: 1px solid var(--border); }
+  .rung.target { background: color-mix(in srgb, var(--cur) 14%, transparent); border-top-color: var(--cur); }
+  .rung .lab { width: 34px; font-size: 15px; color: var(--dim); }
+  .rung.target .lab { color: var(--cur); font-weight: 700; }
+  .ball { position: absolute; left: 50%; width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; background: var(--warn); transition: top 70ms linear; }
+  .ball.in { background: var(--ok); }
+  .ball.off { opacity: 0; }
+  .strip { display: flex; flex-wrap: nowrap; gap: 0; justify-content: center; margin: 4px 0 10px; }
+  .strip span { --line: var(--dim); padding: 4px 1px; } .strip span.cur { --line: var(--cur); } .strip span.done { --line: var(--ok); } .strip span.helped { --line: var(--help); } .strip span.skipped { --line: var(--skip); }
+  .strip span.cur svg { transform: scale(1.35); }
+    .scroll { overflow: hidden; position: relative; border-radius: 12px; background: var(--card); border: 1px solid var(--border); }
+  .scroll .inner { transition: transform 300ms ease; will-change: transform; }
+  .scroll svg.trace { position: absolute; left: 0; top: 0; pointer-events: none; }
+  .scroll .center { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: color-mix(in srgb, var(--cur) 35%, transparent); }
+  /* SW-50 additions */
+  .warn { color: var(--warn); } .ok { color: var(--ok); }
+  .wrap { flex-wrap: wrap; } .gap { margin: 10px 0; }
+  .chosen { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
+  .chip { padding: 8px 10px; font-size: 14px; border-radius: 999px; }
+  .invisible { visibility: hidden; }
+  .caption { background: color-mix(in srgb, var(--cur) 12%, transparent); border-radius: 10px; padding: 8px 12px; margin: 6px 0; }
+  .keyhead { margin: 2px 0 6px; } .keystaff svg { display: block; }
+  .pinbox { position: absolute; left: 0; top: 0; background: var(--card); box-shadow: 6px 0 8px -4px color-mix(in srgb, var(--fg) 20%, transparent); }
+  .pinbox svg { display: block; }
+  .flip { font-size: 14px; padding: 6px 10px; border-radius: 999px; }
+  a { color: var(--accent); }
+  input[type=checkbox] { width: 24px; height: 24px; flex: none; accent-color: var(--accent); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<noscript>This app needs JavaScript to listen through your microphone. <a href="../">Read about it first.</a></noscript>
+<script type="module" src="../js/shell/app.js"></script>
+</body>
+</html>

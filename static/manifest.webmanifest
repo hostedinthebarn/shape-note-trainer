@@ -2,7 +2,7 @@
   "name": "Sing the Shapes",
   "short_name": "Sing Shapes",
   "description": "Learn to sight-read 7-shape notes by singing into your phone.",
-  "start_url": "./",
+  "start_url": "./practice/",
   "scope": "./",
   "display": "standalone",
   "background_color": "#fbfaf7",

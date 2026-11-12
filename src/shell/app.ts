@@ -110,7 +110,7 @@ function welcome(app: HTMLElement) {
     </div>
     <button class="primary big" id="go">Get started</button>
     <p class="dim small" style="margin-top:14px">Free, with no account. What you sing is heard by the app on your phone and never sent anywhere. We count visits with Cloudflare's cookie-free analytics; your practice history stays on your phone.</p>
-    <p class="dim small">Made by <a href="https://hostedinthebarn.com/">Hosted in the Barn</a>. <a href="https://github.com/hostedinthebarn/shape-note-trainer">Source code</a> (MIT).</p>`;
+    <p class="dim small"><a href="/?about">What is this?</a> Made by <a href="https://hostedinthebarn.com/">Hosted in the Barn</a>. <a href="https://github.com/hostedinthebarn/shape-note-trainer">Source code</a> (MIT).</p>`;
   $("#go")!.onclick = () => go("voice");
 }
 
@@ -484,7 +484,7 @@ document.fonts.load("40px Bravura").finally(render);
 // SW-51: work offline once it has been opened. Production only: the dev server (localhost or a
 // cloudflared quick tunnel to the phone) must always show the latest edit.
 if ("serviceWorker" in navigator && location.hostname === "sing.hostedinthebarn.com") {
-  navigator.serviceWorker.register("sw.js").catch(() => { /* offline support is a bonus, never a blocker */ });
+  navigator.serviceWorker.register("/sw.js").catch(() => { /* offline support is a bonus, never a blocker */ });
 }
 
 // For the dev check in Chrome (no effect on the app).

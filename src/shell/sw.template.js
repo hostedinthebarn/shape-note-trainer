@@ -18,6 +18,7 @@ self.addEventListener("activate", (e) => {
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== "GET" || url.origin !== location.origin) return;
-  const key = url.pathname.endsWith("/") ? "./" : e.request;
+  // Pages are cached under their folder URL, so /practice/ and /practice/?x both find it.
+  const key = url.pathname.endsWith("/") ? url.pathname : e.request;
   e.respondWith(caches.match(key, { ignoreSearch: true }).then((hit) => hit || fetch(e.request)));
 });
