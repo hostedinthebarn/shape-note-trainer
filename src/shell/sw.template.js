@@ -20,5 +20,13 @@ self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET" || url.origin !== location.origin) return;
   // Pages are cached under their folder URL, so /practice/ and /practice/?x both find it.
   const key = url.pathname.endsWith("/") ? url.pathname : e.request;
+  // The landing page is network-first, with the cache only as the offline fallback. Cache-first kept
+  // serving a returning visitor the copy from their first visit (the app itself, before the landing
+  // page existed) until every tab closed. The landing page loads nothing the app needs, so a fresh
+  // copy can't mix deploys. The app stays cache-first.
+  if (url.pathname === "/") {
+    e.respondWith(fetch(e.request).catch(() => caches.match(key, { ignoreSearch: true })));
+    return;
+  }
   e.respondWith(caches.match(key, { ignoreSearch: true }).then((hit) => hit || fetch(e.request)));
 });
