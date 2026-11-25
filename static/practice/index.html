@@ -23,7 +23,7 @@
   :root { --bg:#fbfaf7; --fg:#1d1d1f; --dim:#77756f; --line:#2b2b2b; --card:#fff; --border:#e4e1da;
     --cur:#1f6feb; --ok:#1a7f37; --help:#bf8700; --skip:#a0a0a0; --warn:#cf222e; --accent:#1f6feb; }
   @media (prefers-color-scheme: dark) { :root { --bg:#141414; --fg:#eee; --dim:#999; --line:#ddd; --card:#1e1e1e; --border:#333;
-    --cur:#58a6ff; --ok:#3fb950; --help:#d29922; --skip:#666; --warn:#f85149; --accent:#58a6ff; } }
+    --cur:#58a6ff; --ok:#3fb950; --help:#e3b341; --skip:#666; --warn:#f85149; --accent:#58a6ff; } }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.4 -apple-system, system-ui, sans-serif; }
   body { padding: env(safe-area-inset-top) 0 90px; }
@@ -63,11 +63,22 @@
   .rung.target { background: color-mix(in srgb, var(--cur) 14%, transparent); border-top-color: var(--cur); }
   .rung .lab { width: 34px; font-size: 15px; color: var(--dim); }
   .rung.target .lab { color: var(--cur); font-weight: 700; }
-  .ball { position: absolute; left: 50%; width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; background: var(--warn); transition: top 70ms linear; }
-  .ball.in { background: var(--ok); }
+  /* Second cue besides colour (SW-54): off = hollow ring + arrow toward the target, in tune = solid disc + tick. */
+  .ball { position: absolute; left: 50%; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; background: var(--card); border: 3px solid var(--warn); color: var(--warn); font-size: 14px; line-height: 24px; text-align: center; font-weight: 700; transition: top 70ms linear; }
+  .ball.in { background: var(--ok); border-color: var(--ok); color: #fff; }
   .ball.off { opacity: 0; }
   .strip { display: flex; flex-wrap: nowrap; gap: 0; justify-content: center; margin: 4px 0 10px; }
   .strip span { --line: var(--dim); padding: 4px 1px; } .strip span.cur { --line: var(--cur); } .strip span.done { --line: var(--ok); } .strip span.helped { --line: var(--help); } .strip span.skipped { --line: var(--skip); }
+  .strip span { position: relative; }
+  .strip span.done::after, .strip span.helped::after, .strip span.skipped::after { position: absolute; left: 0; right: 0; bottom: -9px; text-align: center; font-size: 10px; font-weight: 700; line-height: 10px; }
+  .strip span.done::after { content: "\2713"; color: var(--ok); }
+  .strip span.helped::after { content: "H"; color: var(--help); }
+  .strip span.skipped::after { content: "\2715"; color: var(--skip); }
+  .strip { padding-bottom: 8px; }
+  .mk { font: 700 11px -apple-system, system-ui, sans-serif; text-anchor: middle; }
+  .mk.helped { fill: var(--help); } .mk.skipped { fill: var(--skip); }
+  .mark { font-weight: 700; display: inline-block; width: 1.1em; text-align: center; }
+  .mark.helped { color: var(--help); } .mark.skipped { color: var(--skip); }
   .strip span.cur svg { transform: scale(1.35); }
     .scroll { overflow: hidden; position: relative; border-radius: 12px; background: var(--card); border: 1px solid var(--border); }
   .scroll .inner { transition: transform 300ms ease; will-change: transform; }

@@ -411,6 +411,12 @@ function liveFrame() {
     const p = Math.max(live.lo - 0.4, Math.min(live.hi + 0.4, fold(last.pos)));
     ball.classList.remove("off");
     ball.classList.toggle("in", v.status === "holding");
+    // Second cue besides colour: tick when in tune, arrow toward the target when off.
+    const sym = v.status === "holding" ? "✓" : v.status === "flat" ? "▲" : "▼";
+    if (ball.textContent !== sym) {
+      ball.textContent = sym;
+      ball.setAttribute("aria-label", v.status === "holding" ? "In tune" : v.status === "flat" ? "Flat, go up" : "Sharp, go down");
+    }
     ball.style.top = `${(live.hi - p) * live.rungH + live.rungH / 2}px`;
   } else {
     const svg = $("#trace");
@@ -448,7 +454,7 @@ function summary(app: HTMLElement) {
     <div style="margin:8px 0;overflow-x:auto">${st.svg}</div>
     ${sm.trouble.length ? `<div class="card"><b>Worth another look</b>${sm.trouble.slice(0, 5).map((i) => {
       const r = attempt.results[i], d = ex.melody.degrees[i];
-      return `<div class="row" style="margin-top:6px"><span class="${r.outcome}">${shapeSvg(d, 28)}</span><span><b>${degName(d)}</b>, note ${i + 1} <span class="dim small">(${r.outcome})</span></span></div>`;
+      return `<div class="row" style="margin-top:6px"><span class="${r.outcome}">${shapeSvg(d, 28)}</span><span><b>${degName(d)}</b>, note ${i + 1} <span class="dim small">(${r.outcome})</span></span><span class="mark ${r.outcome}" aria-hidden="true">${r.outcome === "helped" ? "H" : "✕"}</span></div>`;
     }).join("")}${sm.trouble.length > 5 ? `<div class="dim small" style="margin-top:6px">and ${sm.trouble.length - 5} more</div>` : ""}</div>` : ""}
     ${sm.lean ? `<p style="margin-top:12px">You tend to sing a little <b>${sm.lean}</b>.</p>` : ""}
     ${sm.clean ? `<p class="ok" style="margin-top:12px"><b>Clean attempt.</b> ${streak} in a row at this level.</p>` : ""}
