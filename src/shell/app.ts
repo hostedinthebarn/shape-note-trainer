@@ -348,7 +348,7 @@ function renderExercise(app = $("#app")!) {
           <div class="rung ${d === target ? "target" : ""}" style="top:${(hi - d) * rungH}px;height:${rungH}px">
             ${shapeSvg(d, rungH * 0.75)}<span class="lab">${degName(d)}</span>
           </div>`).join("")}
-        <div class="ball off" id="ball"></div>
+        <div class="ball off" id="ball" role="img"></div>
       </div>
       <div class="say" id="say"></div>
       ${actions}`;

@@ -66,6 +66,7 @@
   /* Second cue besides colour (SW-54): off = hollow ring + arrow toward the target, in tune = solid disc + tick. */
   .ball { position: absolute; left: 50%; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; background: var(--card); border: 3px solid var(--warn); color: var(--warn); font-size: 14px; line-height: 24px; text-align: center; font-weight: 700; transition: top 70ms linear; }
   .ball.in { background: var(--ok); border-color: var(--ok); color: #fff; }
+  @media (prefers-color-scheme: dark) { .ball.in { color: #0b0b0b; } }
   .ball.off { opacity: 0; }
   .strip { display: flex; flex-wrap: nowrap; gap: 0; justify-content: center; margin: 4px 0 10px; }
   .strip span { --line: var(--dim); padding: 4px 1px; } .strip span.cur { --line: var(--cur); } .strip span.done { --line: var(--ok); } .strip span.helped { --line: var(--help); } .strip span.skipped { --line: var(--skip); }
