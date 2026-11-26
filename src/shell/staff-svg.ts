@@ -53,6 +53,12 @@ export function staffSvg(layout: StaffLayout, o: SvgOptions): StaffSvg {
     for (const l of sys.lines) add(l.note, line(l, s));
     for (const g of sys.glyphs) add(g.note, glyph(g, s));
     for (const [i, html] of byNote) parts.push(`<g class="note ${o.classOf?.(i) ?? ""}" data-i="${i}">${html.join("")}</g>`);
+    // Second cue besides colour (SW-54): a letter under helped and skipped notes.
+    layout.anchors.forEach((a, i) => {
+      if (a.system !== s) return;
+      const c = o.classOf?.(i) ?? "";
+      if (c === "helped" || c === "skipped") parts.push(`<text class="mk ${c}" x="${X(a.x)}" y="${f(Y(a.y, s) + 2.6 * sp)}">${c === "helped" ? "H" : "✕"}</text>`);
+    });
   });
   return {
     svg: `<svg class="staff ${o.className ?? ""}" viewBox="0 0 ${f(width)} ${f(height)}" width="${f(width)}" height="${f(height)}">${parts.join("")}</svg>`,
